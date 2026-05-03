@@ -4,7 +4,7 @@ from app.schemas.summary import DailySummaryResponse
 from app.services.openai_analysis_service import build_openai_daily_analysis
 
 
-# 주요 산만함 후보로 보는 카테고리
+# 문제 카테고리 후보로 볼 항목
 DISTRACTION_CATEGORIES = {
     AppCategory.ENTERTAINMENT,
     AppCategory.GAME,
@@ -21,7 +21,7 @@ def build_daily_analysis(summary: DailySummaryResponse) -> DailyAnalysisResponse
     if openai_analysis is not None:
         return openai_analysis
 
-    # OpenAI 설정이 없거나 호출이 실패했을 때 쓰는 로컬 대체 분석
+    # OpenAI 실패 시 간단한 로컬 분석을 반환한다.
     top_app_names = ", ".join(app.appName for app in summary.topApps) or "앱 없음"
 
     if summary.totalUsageSeconds == 0:
@@ -54,9 +54,9 @@ def build_daily_analysis(summary: DailySummaryResponse) -> DailyAnalysisResponse
 
 
 def _select_main_problem(summary: DailySummaryResponse) -> AppCategory | None:
-    # 사용량이 가장 큰 산만함 카테고리를 우선 선택
+    # 산만함 카테고리가 있으면 사용량이 가장 큰 항목을 선택한다.
     for category_summary in summary.categorySummaries:
         if category_summary.category in DISTRACTION_CATEGORIES:
             return category_summary.category
-    # 산만함 카테고리가 없으면 가장 많이 사용한 카테고리를 대표값으로 사용
+    # 없으면 가장 많이 사용한 카테고리를 대표값으로 사용한다.
     return summary.categorySummaries[0].category if summary.categorySummaries else None

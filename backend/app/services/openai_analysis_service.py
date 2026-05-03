@@ -10,6 +10,7 @@ def build_openai_daily_analysis(
     summary: DailySummaryResponse,
     fallback_main_problem: AppCategory | None,
 ) -> DailyAnalysisResponse | None:
+    # OpenAI 키가 없으면 로컬 대체 분석을 쓰게 한다.
     if not settings.openai_api_key:
         return None
 
@@ -22,6 +23,7 @@ def build_openai_daily_analysis(
     summary_json = json.dumps(summary.model_dump(mode="json"), ensure_ascii=False)
 
     try:
+        # 요약 데이터만 보내고, 결과는 JSON으로 받는다.
         response = client.responses.create(
             model=settings.openai_model,
             instructions=(
@@ -41,6 +43,7 @@ def build_openai_daily_analysis(
     except Exception:
         return None
 
+    # 모델 응답을 DailyAnalysisResponse로 변환한다.
     content = _strip_json_fence(response.output_text)
     try:
         data = json.loads(content)
@@ -64,6 +67,7 @@ def build_openai_daily_analysis(
 
 
 def _parse_category(value: object) -> AppCategory | None:
+    # 모델이 준 문자열을 서버 enum으로 변환한다.
     if value is None:
         return None
     try:
@@ -73,6 +77,7 @@ def _parse_category(value: object) -> AppCategory | None:
 
 
 def _strip_json_fence(text: str) -> str:
+    # 혹시 ```json 코드블록으로 오면 JSON 본문만 남긴다.
     stripped = text.strip()
     if stripped.startswith("```json"):
         return stripped.removeprefix("```json").removesuffix("```").strip()

@@ -18,6 +18,7 @@ class FirestoreClientError(RuntimeError):
 
 
 def create_firestore_client() -> Any:
+    # Firebase Admin SDK로 Firestore 클라이언트를 만든다.
     try:
         import firebase_admin
         from firebase_admin import credentials, firestore
@@ -26,6 +27,7 @@ def create_firestore_client() -> Any:
             "Firestore를 사용하려면 firebase-admin 패키지가 필요합니다."
         ) from exc
 
+    # Admin 앱은 프로세스당 한 번만 초기화해야 한다.
     if not firebase_admin._apps:
         options = {}
         if settings.firebase_project_id:
@@ -43,13 +45,13 @@ def create_firestore_client() -> Any:
 
 class FirestoreAppCategoryRepository:
     def __init__(self, db: Any) -> None:
-        self._db = db
         self._collection = db.collection("app_categories")
         self._default_categories = {
             category.packageName: category for category in DEFAULT_APP_CATEGORIES
         }
 
     def list_categories(self) -> list[AppCategoryResponse]:
+        # 저장된 카테고리가 없으면 기본 매핑을 보여준다.
         categories = [
             self._from_document(snapshot.to_dict())
             for snapshot in self._collection.stream()
@@ -60,15 +62,18 @@ class FirestoreAppCategoryRepository:
         return sorted(self._default_categories.values(), key=lambda item: item.packageName)
 
     def get_category(self, package_name: str, app_name: str) -> AppCategoryResponse:
+        # 1순위: Firestore에 저장된 카테고리 캐시
         snapshot = self._collection.document(package_name).get()
         if snapshot.exists:
             return self._from_document(snapshot.to_dict())
 
+        # 2순위: 서버 기본 앱 매핑
         if package_name in self._default_categories:
             category = self._default_categories[package_name]
             self._save_category(category)
             return category
 
+        # 3순위: 시스템 앱 prefix 규칙
         if package_name.startswith(SYSTEM_PACKAGE_PREFIXES):
             category = self._build_category(
                 package_name=package_name,
@@ -79,6 +84,7 @@ class FirestoreAppCategoryRepository:
             self._save_category(category)
             return category
 
+        # 4순위: 모르는 일반 앱은 AI로 분류하고 실패 시 ETC로 저장
         ai_category = classify_app_category(
             package_name=package_name,
             app_name=app_name,
@@ -95,6 +101,7 @@ class FirestoreAppCategoryRepository:
     def upsert_category(
         self, package_name: str, request: AppCategoryUpdateRequest
     ) -> AppCategoryResponse:
+        # 사용자가 직접 수정한 카테고리는 항상 우선한다.
         category = self._build_category(
             package_name=package_name,
             app_name=request.appName,
@@ -105,6 +112,7 @@ class FirestoreAppCategoryRepository:
         return category
 
     def _save_category(self, category: AppCategoryResponse) -> None:
+        # packageName을 문서 ID로 사용해서 같은 앱은 덮어쓴다.
         document = self._collection.document(category.packageName)
         snapshot = document.get()
         data = {
@@ -116,6 +124,7 @@ class FirestoreAppCategoryRepository:
         document.set(data, merge=True)
 
     def _from_document(self, data: dict[str, Any] | None) -> AppCategoryResponse:
+        # Firestore 문서를 API 응답 스키마로 변환한다.
         if not data:
             raise FirestoreClientError("빈 앱 카테고리 문서는 사용할 수 없습니다.")
         return AppCategoryResponse(
@@ -150,6 +159,7 @@ class FirestoreUsageLogRepository:
         self._category_repository = category_repository
 
     def save(self, user_id: str, item: UsageLogCreateItem) -> UsageLogResponse:
+        # 저장 전에 서버 기준 카테고리를 붙인다.
         category = self._category_repository.get_category(
             package_name=item.packageName,
             app_name=item.appName,
@@ -169,6 +179,8 @@ class FirestoreUsageLogRepository:
             usageSeconds=item.usageSeconds,
             openCount=item.openCount,
         )
+
+        # userId + date + packageName 기준 하루 요약 로그를 저장한다.
         document = self._collection.document(usage_log_id)
         snapshot = document.get()
         data = {
@@ -181,6 +193,7 @@ class FirestoreUsageLogRepository:
         return usage_log
 
     def list_by_user_and_date(self, user_id: str, date: str) -> list[UsageLogResponse]:
+        # 특정 사용자의 특정 날짜 로그만 조회한다.
         snapshots = (
             self._collection.where("userId", "==", user_id)
             .where("date", "==", date)
@@ -194,6 +207,7 @@ class FirestoreUsageLogRepository:
         return sorted(logs, key=lambda item: item.usageSeconds, reverse=True)
 
     def _from_document(self, data: dict[str, Any] | None) -> UsageLogResponse:
+        # Firestore 문서를 사용 로그 응답 스키마로 변환한다.
         if not data:
             raise FirestoreClientError("빈 사용 로그 문서는 사용할 수 없습니다.")
         return UsageLogResponse(
@@ -209,6 +223,7 @@ class FirestoreUsageLogRepository:
 
 
 def _server_timestamp() -> Any:
+    # Firestore 서버 시간을 createdAt/updatedAt에 사용한다.
     from firebase_admin import firestore
 
     return firestore.SERVER_TIMESTAMP

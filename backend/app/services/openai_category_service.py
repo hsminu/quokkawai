@@ -3,6 +3,7 @@ from app.schemas.common import AppCategory
 
 
 def classify_app_category(package_name: str, app_name: str) -> AppCategory | None:
+    # OpenAI 키가 없으면 호출하지 않고 None을 반환한다.
     if not settings.openai_api_key:
         return None
 
@@ -14,6 +15,7 @@ def classify_app_category(package_name: str, app_name: str) -> AppCategory | Non
     client = OpenAI(api_key=settings.openai_api_key)
 
     try:
+        # 앱 이름과 패키지명만 보내서 enum 하나만 받는다.
         response = client.responses.create(
             model=settings.openai_model,
             instructions=(
@@ -36,6 +38,7 @@ def classify_app_category(package_name: str, app_name: str) -> AppCategory | Non
 
 
 def _parse_category(value: str) -> AppCategory | None:
+    # 모델이 설명을 붙이지 않았다는 가정하에 enum 값만 정리한다.
     cleaned = value.strip().strip('"').strip("'").upper()
     try:
         return AppCategory(cleaned)

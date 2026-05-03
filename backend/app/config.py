@@ -12,20 +12,25 @@ BACKEND_DIR = Path(__file__).resolve().parents[1]
 PROJECT_DIR = BACKEND_DIR.parent
 
 if load_dotenv is not None:
+    # 루트 .env보다 backend/.env 값을 우선한다.
     load_dotenv(PROJECT_DIR / ".env")
     load_dotenv(BACKEND_DIR / ".env", override=True)
 
 
 @dataclass(frozen=True)
 class Settings:
+    # memory 또는 firestore
     database_backend: str = os.getenv("DATABASE_BACKEND", "memory")
+    # Firebase 서비스 계정 JSON 경로
     firebase_credentials_path: str | None = (
         os.getenv("FIREBASE_CREDENTIALS_PATH")
         or os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
     )
+    # Firebase 프로젝트 ID
     firebase_project_id: str | None = (
         os.getenv("FIREBASE_PROJECT_ID") or os.getenv("GOOGLE_CLOUD_PROJECT")
     )
+    # OpenAI API 설정
     openai_api_key: str | None = os.getenv("OPENAI_API_KEY")
     openai_model: str = os.getenv("OPENAI_MODEL", "gpt-5.4-mini")
 
