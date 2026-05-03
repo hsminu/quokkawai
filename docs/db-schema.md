@@ -441,3 +441,40 @@ daily_analyses: userId + date
 ```
 
 필요 시 Firebase Console에서 복합 인덱스를 생성한다.
+
+---
+
+## Current Implementation Notes
+
+### app_categories Cache
+
+The `app_categories` collection is used as a reusable category cache.
+
+Category records can come from:
+
+```text
+default backend mapping
+manual user update
+OpenAI classification for unknown apps
+SYSTEM prefix fallback
+ETC fallback
+```
+
+Recommended document path remains:
+
+```text
+app_categories/{packageName}
+```
+
+If OpenAI classifies an unknown package, the backend should save:
+
+```json
+{
+  "packageName": "com.example.app",
+  "appName": "Example App",
+  "category": "PRODUCTIVITY",
+  "isUserDefined": false
+}
+```
+
+Manual user updates should set `isUserDefined` to `true` and override future AI/default classification.

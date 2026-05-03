@@ -1,9 +1,10 @@
 from app.schemas.analysis import DailyAnalysisResponse
 from app.schemas.common import AppCategory
 from app.schemas.summary import DailySummaryResponse
+from app.services.openai_analysis_service import build_openai_daily_analysis
 
 
-# MVP에서 문제 카테고리로 볼 항목
+# Categories treated as the main distraction candidates.
 DISTRACTION_CATEGORIES = {
     AppCategory.ENTERTAINMENT,
     AppCategory.GAME,
@@ -12,8 +13,15 @@ DISTRACTION_CATEGORIES = {
 
 
 def build_daily_analysis(summary: DailySummaryResponse) -> DailyAnalysisResponse:
-    # 지금은 OpenAI 연결 전이라 요약 데이터로 간단한 문장만 생성
     main_problem = _select_main_problem(summary)
+    openai_analysis = build_openai_daily_analysis(
+        summary=summary,
+        fallback_main_problem=main_problem,
+    )
+    if openai_analysis is not None:
+        return openai_analysis
+
+    # Fallback used when OpenAI is not configured or the API call fails.
     top_app_names = ", ".join(app.appName for app in summary.topApps) or "no apps"
 
     if summary.totalUsageSeconds == 0:
@@ -46,9 +54,9 @@ def build_daily_analysis(summary: DailySummaryResponse) -> DailyAnalysisResponse
 
 
 def _select_main_problem(summary: DailySummaryResponse) -> AppCategory | None:
-    # 산만함 카테고리가 있으면 그중 가장 많이 쓴 카테고리를 선택
+    # Pick the highest-usage distraction category first.
     for category_summary in summary.categorySummaries:
         if category_summary.category in DISTRACTION_CATEGORIES:
             return category_summary.category
-    # 없으면 가장 많이 쓴 카테고리를 대표값으로 사용
+    # If there is no distraction category, use the top category as a representative.
     return summary.categorySummaries[0].category if summary.categorySummaries else None

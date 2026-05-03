@@ -176,3 +176,30 @@ MVP에서 구현할 기능은 다음과 같다.
 ## 9. 프로젝트 한 줄 정의
 
 Quokkawai는 Flutter 앱에서 수집한 하루 앱별 사용량 요약 데이터를 FastAPI 서버로 전송하고, Firestore에 저장한 뒤, 일간 사용 요약과 AI 피드백을 제공하는 디지털 디톡스 서비스이다.
+
+---
+
+## Current Implementation Notes
+
+The backend MVP currently supports OpenAI in two places:
+
+1. Daily analysis: `/analysis/daily` builds a daily summary first, then asks OpenAI to generate `insight` and `recommendation`.
+2. App category classification: when a usage log contains an unknown non-system app, the server asks OpenAI to classify it into one of the supported category enum values.
+
+Category classification is not performed for every request. The server uses this order:
+
+```text
+known packageName mapping
+-> system package prefix rule
+-> OpenAI category classification
+-> ETC fallback
+```
+
+The result is cached in `app_categories` so the same package does not need to be classified repeatedly.
+
+OpenAI configuration is read from environment variables:
+
+```env
+OPENAI_API_KEY=...
+OPENAI_MODEL=gpt-5.4-mini
+```

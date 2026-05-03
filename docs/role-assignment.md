@@ -249,3 +249,32 @@ feature/android-usage-collector
 feature/google-login
 feature/deploy
 ```
+
+---
+
+## Current Implementation Notes
+
+### Backend / AI Responsibility
+
+The current backend MVP includes two AI-backed features:
+
+```text
+1. Daily usage analysis through POST /analysis/daily
+2. Unknown app category classification during usage log save
+```
+
+Backend work owns the API flow, fallback behavior, and category cache writes.
+
+AI work owns prompt quality, response format, and future improvement of analysis/category classification accuracy.
+
+### Work Rule
+
+OpenAI API keys must not be committed.
+
+Local development uses:
+
+```text
+backend/.env
+```
+
+Only `backend/.env.example` should be committed.

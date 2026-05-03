@@ -1,9 +1,10 @@
 from app.schemas.app_category import AppCategoryResponse, AppCategoryUpdateRequest
 from app.schemas.common import AppCategory
 from app.schemas.usage_log import UsageLogCreateItem, UsageLogResponse
+from app.services.openai_category_service import classify_app_category
 
 
-# 기본으로 알고 있는 앱별 카테고리 목록
+# Known app categories used before asking AI.
 DEFAULT_APP_CATEGORIES = [
     AppCategoryResponse(
         packageName="com.google.android.youtube",
@@ -50,7 +51,7 @@ DEFAULT_APP_CATEGORIES = [
 ]
 
 
-# 시스템 앱으로 대충 분류할 패키지 prefix
+# Packages matching these prefixes are classified locally as system apps.
 SYSTEM_PACKAGE_PREFIXES = (
     "com.android.",
     "com.google.android.gms",
@@ -59,7 +60,6 @@ SYSTEM_PACKAGE_PREFIXES = (
 )
 
 
-# Firestore 붙이기 전 임시 앱 카테고리 저장소
 class InMemoryAppCategoryRepository:
     def __init__(self) -> None:
         self._categories = {
@@ -67,54 +67,79 @@ class InMemoryAppCategoryRepository:
         }
 
     def list_categories(self) -> list[AppCategoryResponse]:
-        # 패키지명 순서로 고정해서 응답을 예측 가능하게 함
+        # Keep responses stable for easier testing.
         return sorted(self._categories.values(), key=lambda item: item.packageName)
 
     def get_category(self, package_name: str, app_name: str) -> AppCategoryResponse:
-        # 등록된 앱이면 저장된 카테고리를 그대로 사용
+        # User-defined/default mapping wins.
         if package_name in self._categories:
             return self._categories[package_name]
 
-        # 모르는 앱은 시스템 앱이면 SYSTEM, 아니면 ETC
-        category = (
-            AppCategory.SYSTEM
-            if package_name.startswith(SYSTEM_PACKAGE_PREFIXES)
-            else AppCategory.ETC
-        )
-        return AppCategoryResponse(
-            packageName=package_name,
-            appName=app_name,
-            category=category,
-            isUserDefined=False,
-        )
+        # System app rules are cheap and deterministic, so do them before AI.
+        if package_name.startswith(SYSTEM_PACKAGE_PREFIXES):
+            category = self._build_category(
+                package_name=package_name,
+                app_name=app_name,
+                category=AppCategory.SYSTEM,
+                is_user_defined=False,
+            )
+            self._categories[package_name] = category
+            return category
 
-    def upsert_category(
-        self, package_name: str, request: AppCategoryUpdateRequest
-    ) -> AppCategoryResponse:
-        # 사용자가 직접 수정한 카테고리로 저장
-        category = AppCategoryResponse(
-            packageName=package_name,
-            appName=request.appName,
-            category=request.category,
-            isUserDefined=True,
+        # Unknown normal apps are classified by AI once, then cached.
+        ai_category = classify_app_category(
+            package_name=package_name,
+            app_name=app_name,
+        )
+        category = self._build_category(
+            package_name=package_name,
+            app_name=app_name,
+            category=ai_category or AppCategory.ETC,
+            is_user_defined=False,
         )
         self._categories[package_name] = category
         return category
 
+    def upsert_category(
+        self, package_name: str, request: AppCategoryUpdateRequest
+    ) -> AppCategoryResponse:
+        # Manual edits override future AI/default classification.
+        category = self._build_category(
+            package_name=package_name,
+            app_name=request.appName,
+            category=request.category,
+            is_user_defined=True,
+        )
+        self._categories[package_name] = category
+        return category
 
-# Firestore 붙이기 전 임시 사용 로그 저장소
+    def _build_category(
+        self,
+        package_name: str,
+        app_name: str,
+        category: AppCategory,
+        is_user_defined: bool,
+    ) -> AppCategoryResponse:
+        return AppCategoryResponse(
+            packageName=package_name,
+            appName=app_name,
+            category=category,
+            isUserDefined=is_user_defined,
+        )
+
+
 class InMemoryUsageLogRepository:
     def __init__(self, category_repository: InMemoryAppCategoryRepository) -> None:
         self._category_repository = category_repository
         self._usage_logs: dict[str, UsageLogResponse] = {}
 
     def save(self, user_id: str, item: UsageLogCreateItem) -> UsageLogResponse:
-        # 클라이언트가 보낸 로그에 서버 기준 카테고리를 붙임
+        # Add a server-side category before saving the usage log.
         category = self._category_repository.get_category(
             package_name=item.packageName,
             app_name=item.appName,
         )
-        # 같은 유저/날짜/앱은 하나의 문서처럼 덮어씀
+        # Same user/date/app overwrites the previous daily summary row.
         usage_log_id = f"{user_id}_{item.date}_{item.packageName}"
         usage_log = UsageLogResponse(
             usageLogId=usage_log_id,
@@ -130,7 +155,7 @@ class InMemoryUsageLogRepository:
         return usage_log
 
     def list_by_user_and_date(self, user_id: str, date: str) -> list[UsageLogResponse]:
-        # 특정 유저의 특정 날짜 로그만 골라서 사용 시간 순으로 반환
+        # Return one user's logs for one date, longest usage first.
         logs = [
             log
             for log in self._usage_logs.values()
@@ -139,6 +164,6 @@ class InMemoryUsageLogRepository:
         return sorted(logs, key=lambda item: item.usageSeconds, reverse=True)
 
 
-# 앱 전체에서 공유하는 임시 저장소 인스턴스
+# Shared in-memory repositories used by routers.
 app_category_repository = InMemoryAppCategoryRepository()
 usage_log_repository = InMemoryUsageLogRepository(app_category_repository)

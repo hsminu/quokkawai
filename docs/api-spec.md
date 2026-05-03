@@ -592,3 +592,37 @@ PUT /app-categories/{packageName}
 | NOT_FOUND | 리소스를 찾을 수 없음 |
 | CONFLICT | 중복 또는 충돌 |
 | INTERNAL_SERVER_ERROR | 서버 내부 오류 |
+
+---
+
+## Current Implementation Notes
+
+### Usage Log Category Decision
+
+For `POST /usage-logs` and `POST /usage-logs/bulk`, the client does not send `category`.
+
+The server decides `category` using this order:
+
+```text
+1. Existing app category mapping by packageName
+2. SYSTEM classification by known system package prefix
+3. OpenAI classification for unknown non-system apps
+4. ETC fallback if OpenAI is unavailable or returns an invalid category
+```
+
+When OpenAI successfully classifies an unknown app, the result is cached in `app_categories`.
+
+### Daily Analysis
+
+`POST /analysis/daily` first builds a `DailySummary` from stored usage logs. The summary, not raw usage logs, is sent to OpenAI.
+
+If OpenAI is unavailable, missing, or fails, the server returns a local fallback analysis.
+
+### OpenAI Environment
+
+The backend reads OpenAI settings from `.env`:
+
+```env
+OPENAI_API_KEY=...
+OPENAI_MODEL=gpt-5.4-mini
+```
