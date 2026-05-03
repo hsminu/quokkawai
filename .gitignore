@@ -8,3 +8,5 @@ backend/.env
 backend/.env.*
 !.env.example
 !backend/.env.example
+backend/*service-account*.json
+backend/firebase-credentials.json

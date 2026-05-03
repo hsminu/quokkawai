@@ -1,63 +1,12 @@
+from app.repositories.defaults import (
+    DEFAULT_APP_CATEGORIES,
+    SYSTEM_PACKAGE_PREFIXES,
+    build_usage_log_id,
+)
 from app.schemas.app_category import AppCategoryResponse, AppCategoryUpdateRequest
 from app.schemas.common import AppCategory
 from app.schemas.usage_log import UsageLogCreateItem, UsageLogResponse
 from app.services.openai_category_service import classify_app_category
-
-
-# AI에 묻기 전에 먼저 사용하는 기본 앱 카테고리 목록
-DEFAULT_APP_CATEGORIES = [
-    AppCategoryResponse(
-        packageName="com.google.android.youtube",
-        appName="YouTube",
-        category=AppCategory.ENTERTAINMENT,
-        isUserDefined=False,
-    ),
-    AppCategoryResponse(
-        packageName="com.instagram.android",
-        appName="Instagram",
-        category=AppCategory.SNS,
-        isUserDefined=False,
-    ),
-    AppCategoryResponse(
-        packageName="com.nhn.android.webtoon",
-        appName="Naver Webtoon",
-        category=AppCategory.ENTERTAINMENT,
-        isUserDefined=False,
-    ),
-    AppCategoryResponse(
-        packageName="com.kakao.talk",
-        appName="KakaoTalk",
-        category=AppCategory.COMMUNICATION,
-        isUserDefined=False,
-    ),
-    AppCategoryResponse(
-        packageName="com.google.android.gm",
-        appName="Gmail",
-        category=AppCategory.COMMUNICATION,
-        isUserDefined=False,
-    ),
-    AppCategoryResponse(
-        packageName="com.google.android.calendar",
-        appName="Google Calendar",
-        category=AppCategory.PRODUCTIVITY,
-        isUserDefined=False,
-    ),
-    AppCategoryResponse(
-        packageName="com.android.settings",
-        appName="Settings",
-        category=AppCategory.SYSTEM,
-        isUserDefined=False,
-    ),
-]
-
-
-# 이 prefix에 맞는 패키지는 로컬에서 시스템 앱으로 분류
-SYSTEM_PACKAGE_PREFIXES = (
-    "com.android.",
-    "com.google.android.gms",
-    "com.google.android.inputmethod",
-    "com.samsung.android.app.launcher",
-)
 
 
 class InMemoryAppCategoryRepository:
@@ -140,7 +89,11 @@ class InMemoryUsageLogRepository:
             app_name=item.appName,
         )
         # 같은 사용자/날짜/앱은 기존 하루 요약 로그를 덮어씀
-        usage_log_id = f"{user_id}_{item.date}_{item.packageName}"
+        usage_log_id = build_usage_log_id(
+            user_id=user_id,
+            date=item.date,
+            package_name=item.packageName,
+        )
         usage_log = UsageLogResponse(
             usageLogId=usage_log_id,
             userId=user_id,
@@ -162,8 +115,3 @@ class InMemoryUsageLogRepository:
             if log.userId == user_id and log.date == date
         ]
         return sorted(logs, key=lambda item: item.usageSeconds, reverse=True)
-
-
-# 라우터에서 공유해서 쓰는 인메모리 저장소 인스턴스
-app_category_repository = InMemoryAppCategoryRepository()
-usage_log_repository = InMemoryUsageLogRepository(app_category_repository)

@@ -18,6 +18,14 @@ if load_dotenv is not None:
 
 @dataclass(frozen=True)
 class Settings:
+    database_backend: str = os.getenv("DATABASE_BACKEND", "memory")
+    firebase_credentials_path: str | None = (
+        os.getenv("FIREBASE_CREDENTIALS_PATH")
+        or os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+    )
+    firebase_project_id: str | None = (
+        os.getenv("FIREBASE_PROJECT_ID") or os.getenv("GOOGLE_CLOUD_PROJECT")
+    )
     openai_api_key: str | None = os.getenv("OPENAI_API_KEY")
     openai_model: str = os.getenv("OPENAI_MODEL", "gpt-5.4-mini")
 
