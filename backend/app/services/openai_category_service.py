@@ -17,15 +17,15 @@ def classify_app_category(package_name: str, app_name: str) -> AppCategory | Non
         response = client.responses.create(
             model=settings.openai_model,
             instructions=(
-                "Classify an Android app into exactly one category. "
-                "Return only the enum value, no explanation."
+                "Android 앱을 정확히 하나의 카테고리로 분류하세요. "
+                "설명 없이 enum 값만 반환하세요."
             ),
             input=(
-                "Choose one category from this enum: "
+                "다음 enum 중 하나를 고르세요: "
                 "STUDY, PRODUCTIVITY, COMMUNICATION, ENTERTAINMENT, GAME, SNS, "
                 "SYSTEM, ETC.\n\n"
-                f"App name: {app_name}\n"
-                f"Package name: {package_name}"
+                f"앱 이름: {app_name}\n"
+                f"패키지명: {package_name}"
             ),
             max_output_tokens=20,
         )

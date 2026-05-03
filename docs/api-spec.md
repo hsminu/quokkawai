@@ -595,32 +595,32 @@ PUT /app-categories/{packageName}
 
 ---
 
-## Current Implementation Notes
+## 현재 구현 메모
 
-### Usage Log Category Decision
+### 사용 로그 카테고리 결정
 
-For `POST /usage-logs` and `POST /usage-logs/bulk`, the client does not send `category`.
+`POST /usage-logs`와 `POST /usage-logs/bulk`에서 클라이언트는 `category`를 보내지 않는다.
 
-The server decides `category` using this order:
+서버는 다음 순서로 `category`를 결정한다.
 
 ```text
-1. Existing app category mapping by packageName
-2. SYSTEM classification by known system package prefix
-3. OpenAI classification for unknown non-system apps
-4. ETC fallback if OpenAI is unavailable or returns an invalid category
+1. packageName 기준 기존 앱 카테고리 매핑
+2. 알려진 시스템 앱 package prefix 기준 SYSTEM 분류
+3. 모르는 일반 앱에 대한 OpenAI 분류
+4. OpenAI가 없거나 유효하지 않은 값을 반환하면 ETC 대체 분류
 ```
 
-When OpenAI successfully classifies an unknown app, the result is cached in `app_categories`.
+OpenAI가 모르는 앱을 성공적으로 분류하면 결과를 `app_categories`에 캐싱한다.
 
-### Daily Analysis
+### 일일 분석
 
-`POST /analysis/daily` first builds a `DailySummary` from stored usage logs. The summary, not raw usage logs, is sent to OpenAI.
+`POST /analysis/daily`는 저장된 사용 로그로 먼저 `DailySummary`를 만든다. OpenAI에는 원본 로그가 아니라 요약 데이터만 보낸다.
 
-If OpenAI is unavailable, missing, or fails, the server returns a local fallback analysis.
+OpenAI 설정이 없거나 호출에 실패하면 서버는 로컬 대체 분석을 반환한다.
 
-### OpenAI Environment
+### OpenAI 환경 변수
 
-The backend reads OpenAI settings from `.env`:
+백엔드는 `.env`에서 OpenAI 설정을 읽는다.
 
 ```env
 OPENAI_API_KEY=...

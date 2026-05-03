@@ -252,29 +252,29 @@ feature/deploy
 
 ---
 
-## Current Implementation Notes
+## 현재 구현 메모
 
-### Backend / AI Responsibility
+### 백엔드 / AI 책임 범위
 
-The current backend MVP includes two AI-backed features:
+현재 백엔드 MVP에는 AI 기반 기능이 두 가지 있다.
 
 ```text
-1. Daily usage analysis through POST /analysis/daily
-2. Unknown app category classification during usage log save
+1. POST /analysis/daily 기반 일일 사용 분석
+2. 사용 로그 저장 중 모르는 앱 카테고리 분류
 ```
 
-Backend work owns the API flow, fallback behavior, and category cache writes.
+백엔드 작업은 API 흐름, 대체 처리 동작, 카테고리 캐시 저장을 담당한다.
 
-AI work owns prompt quality, response format, and future improvement of analysis/category classification accuracy.
+AI 작업은 프롬프트 품질, 응답 형식, 분석/카테고리 분류 정확도 개선을 담당한다.
 
-### Work Rule
+### 작업 규칙
 
-OpenAI API keys must not be committed.
+OpenAI API 키는 커밋하면 안 된다.
 
-Local development uses:
+로컬 개발에서는 다음 파일을 사용한다.
 
 ```text
 backend/.env
 ```
 
-Only `backend/.env.example` should be committed.
+커밋 대상은 `backend/.env.example`만 허용한다.

@@ -444,29 +444,29 @@ daily_analyses: userId + date
 
 ---
 
-## Current Implementation Notes
+## 현재 구현 메모
 
-### app_categories Cache
+### app_categories 캐시
 
-The `app_categories` collection is used as a reusable category cache.
+`app_categories` 컬렉션은 재사용 가능한 카테고리 캐시로 사용한다.
 
-Category records can come from:
+카테고리 레코드는 다음 경로로 만들어질 수 있다.
 
 ```text
-default backend mapping
-manual user update
-OpenAI classification for unknown apps
-SYSTEM prefix fallback
-ETC fallback
+백엔드 기본 매핑
+사용자 직접 수정
+모르는 앱에 대한 OpenAI 분류
+SYSTEM prefix 대체 분류
+ETC 대체 분류
 ```
 
-Recommended document path remains:
+권장 문서 경로는 그대로 유지한다.
 
 ```text
 app_categories/{packageName}
 ```
 
-If OpenAI classifies an unknown package, the backend should save:
+OpenAI가 모르는 패키지를 분류하면 백엔드는 다음 형태로 저장한다.
 
 ```json
 {
@@ -477,4 +477,4 @@ If OpenAI classifies an unknown package, the backend should save:
 }
 ```
 
-Manual user updates should set `isUserDefined` to `true` and override future AI/default classification.
+사용자가 직접 수정한 경우 `isUserDefined`를 `true`로 저장하고, 이후 AI/기본 분류보다 우선한다.

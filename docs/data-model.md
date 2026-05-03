@@ -288,28 +288,28 @@ AI는 원본 사용 로그를 직접 분석하지 않는다.
 
 ---
 
-## Current Implementation Notes
+## 현재 구현 메모
 
-### AppCategory Classification Flow
+### AppCategory 분류 흐름
 
-`AppCategory` is decided by the backend, not by the Flutter client.
+`AppCategory`는 Flutter 클라이언트가 아니라 백엔드가 결정한다.
 
-The current MVP uses this classification flow:
+현재 MVP는 다음 분류 흐름을 사용한다.
 
 ```text
-known packageName mapping
--> SYSTEM package prefix rule
--> OpenAI classification for unknown non-system apps
--> ETC fallback
+기존 packageName 매핑
+-> SYSTEM package prefix 규칙
+-> 모르는 일반 앱에 대한 OpenAI 분류
+-> ETC 대체 분류
 ```
 
-When OpenAI classifies an unknown app, that category is saved in the app category store and reused later.
+OpenAI가 모르는 앱을 분류하면 해당 카테고리를 앱 카테고리 저장소에 저장하고 이후 재사용한다.
 
-### DailyAnalysis Generation
+### DailyAnalysis 생성
 
-`DailyAnalysis` is generated from `DailySummary`.
+`DailyAnalysis`는 `DailySummary`를 기반으로 생성한다.
 
-OpenAI receives summarized usage data only:
+OpenAI에는 요약된 사용 데이터만 전달한다.
 
 ```text
 date
@@ -318,4 +318,4 @@ topApps
 categorySummaries
 ```
 
-The backend does not send raw session-level logs to OpenAI in the MVP.
+MVP에서는 백엔드가 원본 세션 단위 로그를 OpenAI에 보내지 않는다.

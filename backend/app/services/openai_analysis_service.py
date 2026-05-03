@@ -25,16 +25,16 @@ def build_openai_daily_analysis(
         response = client.responses.create(
             model=settings.openai_model,
             instructions=(
-                "You are Quokkawai's daily smartphone usage coach. "
-                "Return only JSON. Write insight and recommendation in Korean. "
-                "Be concise, practical, and non-judgmental."
+                "당신은 Quokkawai의 일일 스마트폰 사용 코치입니다. "
+                "JSON만 반환하세요. insight와 recommendation은 한국어로 작성하세요. "
+                "간결하고 실용적이며 비난하지 않는 톤을 유지하세요."
             ),
             input=(
-                "Analyze this daily smartphone usage summary and return JSON with "
-                "exactly these keys: mainProblem, insight, recommendation. "
-                "mainProblem must be one of STUDY, PRODUCTIVITY, COMMUNICATION, "
-                "ENTERTAINMENT, GAME, SNS, SYSTEM, ETC, or null.\n\n"
-                f"Summary:\n{summary_json}"
+                "다음 일일 스마트폰 사용 요약을 분석하고, "
+                "mainProblem, insight, recommendation 키만 가진 JSON을 반환하세요. "
+                "mainProblem은 STUDY, PRODUCTIVITY, COMMUNICATION, ENTERTAINMENT, "
+                "GAME, SNS, SYSTEM, ETC 중 하나이거나 null이어야 합니다.\n\n"
+                f"요약:\n{summary_json}"
             ),
             max_output_tokens=500,
         )
