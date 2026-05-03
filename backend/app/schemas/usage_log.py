@@ -1,62 +1,55 @@
 from typing import List
-from pydantic import BaseModel
+
+from pydantic import BaseModel, Field
+
+from app.schemas.common import AppCategory
 
 
-###############################
-# Android 사용 로그 데이터 타입
-###############################
-
-
-
-# 앱 사용 로그의 공통 필드
-# 단일 업로드와 대량 업로드에서 공통으로 사용한다.
-class UsageLogBase(BaseModel):
+# 단일 앱 사용 로그 입력값
+class UsageLogCreateItem(BaseModel):
     date: str
-    appName: str
     packageName: str
-    category: str | None = None
-    minutesUsed: int
-    openCount: int | None = None
-    notificationCount: int | None = None
-    timeOfDay: str | None = None
+    appName: str
+    usageSeconds: int = Field(..., gt=0)
+    openCount: int | None = Field(default=None, ge=0)
 
 
-# 사용 로그 단일 업로드 요청
-class UsageLogCreateRequest(UsageLogBase):
+# Phase 1 개발용: userId를 body로 받는 단일 저장 요청
+class UsageLogCreateRequest(UsageLogCreateItem):
     userId: str
 
 
-# 서버에 저장된 사용 로그 최종 형태
-class UsageLog(UsageLogBase):
-    logId: str
-    userId: str
-    createdAt: str
-
-
-# 사용 로그 단일 업로드 응답
-class UsageLogResponse(BaseModel):
-    success: bool = True
-    message: str
-    log: UsageLog
-
-
-# 사용 로그 대량 업로드 요청
-# Android에서 하루치 로그를 한 번에 보낼 때 사용한다.
+# 여러 앱 로그를 한 번에 저장하는 요청
 class UsageLogBulkCreateRequest(BaseModel):
     userId: str
-    logs: List[UsageLogBase]
+    logs: List[UsageLogCreateItem]
 
 
-# 사용 로그 대량 업로드 응답
+# 저장/조회 시 반환되는 사용 로그 형태
+class UsageLogResponse(BaseModel):
+    usageLogId: str
+    userId: str
+    date: str
+    packageName: str
+    appName: str
+    category: AppCategory
+    usageSeconds: int
+    openCount: int | None = None
+
+
+# 단일 저장 응답
+class UsageLogCreateResponse(BaseModel):
+    message: str
+    usageLog: UsageLogResponse
+
+
+# 벌크 저장 응답
 class UsageLogBulkCreateResponse(BaseModel):
-    success: bool = True
     message: str
     savedCount: int
 
 
-# 특정 날짜의 사용 로그 조회 응답
-class DailyUsageLogsResponse(BaseModel):
-    success: bool = True
-    userId: str
+# 특정 날짜 로그 목록 응답
+class UsageLogListResponse(BaseModel):
     date: str
-    logs: List[UsageLog]
+    logs: List[UsageLogResponse]

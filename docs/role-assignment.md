@@ -249,3 +249,32 @@ feature/android-usage-collector
 feature/google-login
 feature/deploy
 ```
+
+---
+
+## 현재 구현 메모
+
+### 백엔드 / AI 책임 범위
+
+현재 백엔드 MVP에는 AI 기반 기능이 두 가지 있다.
+
+```text
+1. POST /analysis/daily 기반 일일 사용 분석
+2. 사용 로그 저장 중 모르는 앱 카테고리 분류
+```
+
+백엔드 작업은 API 흐름, 대체 처리 동작, 카테고리 캐시 저장을 담당한다.
+
+AI 작업은 프롬프트 품질, 응답 형식, 분석/카테고리 분류 정확도 개선을 담당한다.
+
+### 작업 규칙
+
+OpenAI API 키는 커밋하면 안 된다.
+
+로컬 개발에서는 다음 파일을 사용한다.
+
+```text
+backend/.env
+```
+
+커밋 대상은 `backend/.env.example`만 허용한다.

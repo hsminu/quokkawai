@@ -592,3 +592,37 @@ PUT /app-categories/{packageName}
 | NOT_FOUND | 리소스를 찾을 수 없음 |
 | CONFLICT | 중복 또는 충돌 |
 | INTERNAL_SERVER_ERROR | 서버 내부 오류 |
+
+---
+
+## 현재 구현 메모
+
+### 사용 로그 카테고리 결정
+
+`POST /usage-logs`와 `POST /usage-logs/bulk`에서 클라이언트는 `category`를 보내지 않는다.
+
+서버는 다음 순서로 `category`를 결정한다.
+
+```text
+1. packageName 기준 기존 앱 카테고리 매핑
+2. 알려진 시스템 앱 package prefix 기준 SYSTEM 분류
+3. 모르는 일반 앱에 대한 OpenAI 분류
+4. OpenAI가 없거나 유효하지 않은 값을 반환하면 ETC 대체 분류
+```
+
+OpenAI가 모르는 앱을 성공적으로 분류하면 결과를 `app_categories`에 캐싱한다.
+
+### 일일 분석
+
+`POST /analysis/daily`는 저장된 사용 로그로 먼저 `DailySummary`를 만든다. OpenAI에는 원본 로그가 아니라 요약 데이터만 보낸다.
+
+OpenAI 설정이 없거나 호출에 실패하면 서버는 로컬 대체 분석을 반환한다.
+
+### OpenAI 환경 변수
+
+백엔드는 `.env`에서 OpenAI 설정을 읽는다.
+
+```env
+OPENAI_API_KEY=...
+OPENAI_MODEL=gpt-5.4-mini
+```

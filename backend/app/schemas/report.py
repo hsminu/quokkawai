@@ -18,7 +18,7 @@ class AppUsageSummary(BaseModel):
     appName: str
     packageName: str | None = None
     category: str
-    minutesUsed: int
+    usageSeconds: int
 
 
 # 하루 단위 리포트

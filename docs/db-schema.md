@@ -441,3 +441,63 @@ daily_analyses: userId + date
 ```
 
 필요 시 Firebase Console에서 복합 인덱스를 생성한다.
+
+---
+
+## 현재 구현 메모
+
+### app_categories 캐시
+
+`app_categories` 컬렉션은 재사용 가능한 카테고리 캐시로 사용한다.
+
+카테고리 레코드는 다음 경로로 만들어질 수 있다.
+
+```text
+백엔드 기본 매핑
+사용자 직접 수정
+모르는 앱에 대한 OpenAI 분류
+SYSTEM prefix 대체 분류
+ETC 대체 분류
+```
+
+권장 문서 경로는 그대로 유지한다.
+
+```text
+app_categories/{packageName}
+```
+
+OpenAI가 모르는 패키지를 분류하면 백엔드는 다음 형태로 저장한다.
+
+```json
+{
+  "packageName": "com.example.app",
+  "appName": "Example App",
+  "category": "PRODUCTIVITY",
+  "isUserDefined": false
+}
+```
+
+사용자가 직접 수정한 경우 `isUserDefined`를 `true`로 저장하고, 이후 AI/기본 분류보다 우선한다.
+
+### 현재 백엔드 Firestore 설정
+
+백엔드는 다음 환경 변수로 저장소를 선택한다.
+
+```env
+DATABASE_BACKEND=memory
+```
+
+Firestore를 사용할 때는 다음처럼 설정한다.
+
+```env
+DATABASE_BACKEND=firestore
+FIREBASE_CREDENTIALS_PATH=path/to/firebase-service-account.json
+FIREBASE_PROJECT_ID=your-firebase-project-id
+```
+
+`DATABASE_BACKEND=firestore`일 때 백엔드는 다음 컬렉션을 실제 Firestore에 읽고 쓴다.
+
+```text
+usage_logs
+app_categories
+```

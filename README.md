@@ -15,3 +15,28 @@ AI 기반 디지털 디톡스 앱 프로젝트입니다.
 - FastAPI
 - Firebase
 - OpenAI API
+
+## 현재 백엔드 MVP 메모
+
+- FastAPI 백엔드는 `/usage-logs`로 하루 앱 사용 로그를 저장한다.
+- 사용 시간은 `usageSeconds`만 사용한다.
+- 앱 카테고리는 서버가 결정하며, 클라이언트는 `category`를 보내지 않는다.
+- 이미 알고 있는 앱은 서버의 기본 카테고리 매핑을 사용한다.
+- 모르는 일반 앱은 OpenAI로 한 번 분류하고 `app_categories`에 캐싱한다.
+- OpenAI 설정이 없거나 호출에 실패하면 모르는 앱은 `ETC`로 분류한다.
+- `/analysis/daily`는 가능하면 OpenAI로 `insight`와 `recommendation`을 만들고, 실패하면 로컬 대체 분석을 사용한다.
+- `DATABASE_BACKEND=firestore`로 설정하면 `usage_logs`와 `app_categories`를 Firestore에 저장한다.
+
+## 환경 변수
+
+로컬 개발에서는 `backend/.env` 파일을 만든다.
+
+```env
+DATABASE_BACKEND=memory
+FIREBASE_CREDENTIALS_PATH=path/to/firebase-service-account.json
+FIREBASE_PROJECT_ID=your-firebase-project-id
+OPENAI_API_KEY=sk-...
+OPENAI_MODEL=gpt-5.4-mini
+```
+
+Firestore를 사용할 때는 `DATABASE_BACKEND=firestore`로 바꾸고, Firebase 서비스 계정 JSON 경로를 `FIREBASE_CREDENTIALS_PATH`에 넣는다.

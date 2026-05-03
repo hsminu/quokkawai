@@ -618,3 +618,57 @@ API 경로는 /usage-logs 계열로 통일한다.
 Flutter 앱에서 한국어 라벨로 변환한다.
 카테고리는 STUDY, PRODUCTIVITY, COMMUNICATION, ENTERTAINMENT, GAME, SNS, SYSTEM, ETC 총 8개를 사용한다.
 ```
+
+---
+
+## 현재 구현 메모
+
+### UsageLog 요청
+
+`UsageLogCreateRequest`와 `UsageLogCreateItem`에는 `category`를 포함하지 않는다.
+
+클라이언트는 다음 값을 보낸다.
+
+```json
+{
+  "date": "2026-05-01",
+  "packageName": "com.google.android.youtube",
+  "appName": "YouTube",
+  "usageSeconds": 5400,
+  "openCount": 12
+}
+```
+
+서버는 분류를 마친 뒤 `UsageLogResponse`에 `category`를 포함해 반환한다.
+
+### 카테고리 분류
+
+유효한 카테고리는 다음 8개를 유지한다.
+
+```text
+STUDY
+PRODUCTIVITY
+COMMUNICATION
+ENTERTAINMENT
+GAME
+SNS
+SYSTEM
+ETC
+```
+
+모르는 일반 앱은 OpenAI로 분류할 수 있다. AI 결과가 없거나 유효하지 않으면 반드시 `ETC`로 대체 분류한다.
+
+### DailyAnalysis 응답
+
+`DailyAnalysisResponse`는 OpenAI로 생성될 수 있다. 응답 형태는 그대로 유지한다.
+
+```json
+{
+  "date": "2026-05-01",
+  "totalUsageSeconds": 14400,
+  "mainProblem": "ENTERTAINMENT",
+  "insight": "...",
+  "recommendation": "...",
+  "topApps": []
+}
+```

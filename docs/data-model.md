@@ -285,3 +285,37 @@ DailyAnalysis는 특정 날짜의 사용 요약을 바탕으로 생성된 AI 분
 AI는 원본 사용 로그를 직접 분석하지 않는다.
 
 서버가 먼저 DailySummary 형태로 데이터를 요약한 뒤, 요약 데이터만 AI에 전달한다.
+
+---
+
+## 현재 구현 메모
+
+### AppCategory 분류 흐름
+
+`AppCategory`는 Flutter 클라이언트가 아니라 백엔드가 결정한다.
+
+현재 MVP는 다음 분류 흐름을 사용한다.
+
+```text
+기존 packageName 매핑
+-> SYSTEM package prefix 규칙
+-> 모르는 일반 앱에 대한 OpenAI 분류
+-> ETC 대체 분류
+```
+
+OpenAI가 모르는 앱을 분류하면 해당 카테고리를 앱 카테고리 저장소에 저장하고 이후 재사용한다.
+
+### DailyAnalysis 생성
+
+`DailyAnalysis`는 `DailySummary`를 기반으로 생성한다.
+
+OpenAI에는 요약된 사용 데이터만 전달한다.
+
+```text
+date
+totalUsageSeconds
+topApps
+categorySummaries
+```
+
+MVP에서는 백엔드가 원본 세션 단위 로그를 OpenAI에 보내지 않는다.
