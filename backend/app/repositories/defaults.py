@@ -2,7 +2,7 @@ from app.schemas.app_category import AppCategoryResponse
 from app.schemas.common import AppCategory
 
 
-# AI에 묻기 전에 먼저 사용하는 기본 앱 카테고리 목록
+# AI 분류 전에 먼저 확인하는 기본 앱 카테고리 목록
 DEFAULT_APP_CATEGORIES = [
     AppCategoryResponse(
         packageName="com.google.android.youtube",
@@ -49,7 +49,7 @@ DEFAULT_APP_CATEGORIES = [
 ]
 
 
-# 이 prefix에 맞는 패키지는 로컬에서 시스템 앱으로 분류
+# 이 prefix로 시작하면 시스템 앱으로 분류한다.
 SYSTEM_PACKAGE_PREFIXES = (
     "com.android.",
     "com.google.android.gms",
@@ -59,4 +59,5 @@ SYSTEM_PACKAGE_PREFIXES = (
 
 
 def build_usage_log_id(user_id: str, date: str, package_name: str) -> str:
+    # 같은 사용자/날짜/앱은 같은 문서 ID를 사용한다.
     return f"{user_id}_{date}_{package_name}"
