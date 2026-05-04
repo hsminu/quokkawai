@@ -192,11 +192,13 @@ class FirestoreUsageLogRepository:
         document.set(data, merge=True)
         return usage_log
 
-    def list_by_user_and_date(self, user_id: str, date: str) -> list[UsageLogResponse]:
-        # 특정 사용자의 특정 날짜 로그만 조회한다.
+    def list_by_user_and_date(self, user_id: str, date: str, end_date: str | None = None) -> list[UsageLogResponse]:
+        # 특정 사용자의 특정 날짜(혹은 기간) 로그를 조회한다.
+        target_end = end_date or date
         snapshots = (
             self._collection.where("userId", "==", user_id)
-            .where("date", "==", date)
+            .where("date", ">=", date)
+            .where("date", "<=", target_end)
             .stream()
         )
         logs = [
@@ -204,6 +206,8 @@ class FirestoreUsageLogRepository:
             for snapshot in snapshots
             if snapshot.to_dict()
         ]
+        if end_date:
+            return sorted(logs, key=lambda item: item.date)
         return sorted(logs, key=lambda item: item.usageSeconds, reverse=True)
 
     def _from_document(self, data: dict[str, Any] | None) -> UsageLogResponse:

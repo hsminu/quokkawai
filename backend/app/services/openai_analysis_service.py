@@ -3,7 +3,9 @@ import json
 from app.config import settings
 from app.schemas.analysis import DailyAnalysisResponse
 from app.schemas.common import AppCategory
+from app.schemas.report import AICoachingReportCreateRequest, DailyTrendItem
 from app.schemas.summary import DailySummaryResponse
+from app.schemas.usage_log import UsageLogResponse
 
 
 def build_openai_daily_analysis(
@@ -64,6 +66,51 @@ def build_openai_daily_analysis(
         recommendation=recommendation,
         topApps=summary.topApps,
     )
+
+
+def build_openai_weekly_analysis(
+    request: AICoachingReportCreateRequest,
+    logs: list[UsageLogResponse],
+    weekly_trend: list[DailyTrendItem],
+) -> dict | None:
+    if not settings.openai_api_key:
+        return None
+
+    try:
+        from openai import OpenAI
+    except ImportError:
+        return None
+
+    client = OpenAI(api_key=settings.openai_api_key)
+
+    trend_data = [{"date": t.date, "minutes": t.minutes} for t in weekly_trend]
+    trend_json = json.dumps(trend_data, ensure_ascii=False)
+
+    try:
+        response = client.responses.create(
+            model=settings.openai_model,
+            instructions=(
+                "당신은 Quokkawai의 주간 스마트폰 사용 코치입니다. "
+                "JSON만 반환하세요. 내용은 한국어로 작성하세요. "
+                "사용자의 주간 트렌드를 보고 적절한 피드백을 주세요."
+            ),
+            input=(
+                "다음은 주간 스마트폰 사용 요약입니다. "
+                "summaryTitle, summaryMessage, focusScore (0-100), screenTimeDeltaMinutes (지난주 대비 변화량 추정), "
+                "recommendations (title과 description을 포함한 객체 리스트), weeklyReflectionPrompt 키를 가진 JSON을 반환하세요.\n\n"
+                f"기간: {request.startDate} ~ {request.endDate}\n"
+                f"일별 사용량(분):\n{trend_json}"
+            ),
+            max_output_tokens=800,
+        )
+    except Exception:
+        return None
+
+    content = _strip_json_fence(response.output_text)
+    try:
+        return json.loads(content)
+    except json.JSONDecodeError:
+        return None
 
 
 def _parse_category(value: object) -> AppCategory | None:

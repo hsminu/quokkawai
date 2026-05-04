@@ -1,7 +1,22 @@
+import uuid
+from collections import defaultdict
+from datetime import datetime
+
 from app.schemas.analysis import DailyAnalysisResponse
 from app.schemas.common import AppCategory
+from app.schemas.report import (
+    AICoachingReport,
+    AICoachingReportCreateRequest,
+    AICoachingReportCreateResponse,
+    DailyTrendItem,
+    RecommendedAction,
+)
 from app.schemas.summary import DailySummaryResponse
-from app.services.openai_analysis_service import build_openai_daily_analysis
+from app.schemas.usage_log import UsageLogResponse
+from app.services.openai_analysis_service import (
+    build_openai_daily_analysis,
+    build_openai_weekly_analysis,
+)
 
 
 # 문제 카테고리 후보로 볼 항목
@@ -50,6 +65,69 @@ def build_daily_analysis(summary: DailySummaryResponse) -> DailyAnalysisResponse
         insight=insight,
         recommendation=recommendation,
         topApps=summary.topApps,
+    )
+
+
+def build_weekly_analysis(
+    request: AICoachingReportCreateRequest,
+    logs: list[UsageLogResponse],
+) -> AICoachingReportCreateResponse:
+    daily_usage = defaultdict(int)
+    for log in logs:
+        daily_usage[log.date] += log.usageSeconds
+
+    weekly_trend = []
+    for date, seconds in sorted(daily_usage.items()):
+        try:
+            dt = datetime.strptime(date, "%Y-%m-%d")
+            day_str = ["월", "화", "수", "목", "금", "토", "일"][dt.weekday()]
+        except ValueError:
+            day_str = "?"
+        weekly_trend.append(DailyTrendItem(day=day_str, date=date, minutes=seconds // 60))
+
+    report_id = f"weekly_{uuid.uuid4().hex[:8]}"
+    created_at = datetime.utcnow().isoformat()
+
+    openai_result = build_openai_weekly_analysis(request, logs, weekly_trend)
+
+    if openai_result:
+        report = AICoachingReport(
+            reportId=report_id,
+            userId=request.userId,
+            startDate=request.startDate,
+            endDate=request.endDate,
+            summaryTitle=openai_result.get("summaryTitle", "주간 리포트"),
+            summaryMessage=openai_result.get("summaryMessage", "이번 주 앱 사용량을 확인해보세요."),
+            focusScore=openai_result.get("focusScore", 70),
+            screenTimeDeltaMinutes=openai_result.get("screenTimeDeltaMinutes", 0),
+            weeklyTrend=weekly_trend,
+            recommendations=[
+                RecommendedAction(**rec) for rec in openai_result.get("recommendations", [])
+            ],
+            weeklyReflectionPrompt=openai_result.get("weeklyReflectionPrompt", "다음 주에는 어떤 습관을 개선하고 싶나요?"),
+            createdAt=created_at,
+        )
+    else:
+        report = AICoachingReport(
+            reportId=report_id,
+            userId=request.userId,
+            startDate=request.startDate,
+            endDate=request.endDate,
+            summaryTitle="주간 사용량 분석",
+            summaryMessage="주간 사용량이 집계되었습니다. 스마트폰 사용 시간을 확인해보세요.",
+            focusScore=50,
+            screenTimeDeltaMinutes=0,
+            weeklyTrend=weekly_trend,
+            recommendations=[
+                RecommendedAction(title="휴식 시간 가지기", description="주말에는 스마트폰 사용을 줄여보세요.")
+            ],
+            weeklyReflectionPrompt="스마트폰 사용을 줄이기 위해 어떤 노력을 할 수 있을까요?",
+            createdAt=created_at,
+        )
+
+    return AICoachingReportCreateResponse(
+        message="weekly analysis created",
+        report=report,
     )
 
 

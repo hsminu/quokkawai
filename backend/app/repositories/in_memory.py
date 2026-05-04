@@ -107,11 +107,14 @@ class InMemoryUsageLogRepository:
         self._usage_logs[usage_log_id] = usage_log
         return usage_log
 
-    def list_by_user_and_date(self, user_id: str, date: str) -> list[UsageLogResponse]:
-        # 특정 사용자/날짜 로그만 골라 사용 시간이 긴 순서로 반환한다.
+    def list_by_user_and_date(self, user_id: str, date: str, end_date: str | None = None) -> list[UsageLogResponse]:
+        # 특정 사용자/날짜(혹은 기간) 로그를 골라 반환한다.
+        target_end = end_date or date
         logs = [
             log
             for log in self._usage_logs.values()
-            if log.userId == user_id and log.date == date
+            if log.userId == user_id and date <= log.date <= target_end
         ]
+        if end_date:
+            return sorted(logs, key=lambda item: item.date)
         return sorted(logs, key=lambda item: item.usageSeconds, reverse=True)
