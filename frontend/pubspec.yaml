@@ -73,6 +73,10 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.0
+  app_usage: ^4.1.0
+  device_apps: ^2.2.0
+  permission_handler: ^12.0.1
+  app_settings: ^7.0.0
 
 dependency_overrides:
   http: 1.4.0

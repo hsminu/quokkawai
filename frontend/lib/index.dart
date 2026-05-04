@@ -1,5 +1,5 @@
 // Export pages
-export '/pages/page7_days_report_copy/page7_days_report_copy_widget.dart'
+export '/pages/page7_days_report_copy/7days_report_widget.dart'
     show Page7DaysReportCopyWidget;
 export '/pages/a_i_coaching_report_copy/a_i_coaching_report_copy_widget.dart'
     show AICoachingReportCopyWidget;

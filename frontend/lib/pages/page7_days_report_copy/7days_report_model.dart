@@ -6,12 +6,32 @@ import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import 'dart:ui';
-import 'page7_days_report_copy_widget.dart' show Page7DaysReportCopyWidget;
+import '7days_report_widget.dart' show Page7DaysReportCopyWidget;
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 import 'package:provider/provider.dart';
+import 'package:app_usage/app_usage.dart';
+
+//실제 7일 data 가져오기
+Future<List<AppUsageInfo>> fetch7DaysUsage() async {
+  try {
+    DateTime endDate = DateTime.now();
+    DateTime startDate = endDate.subtract(const Duration(days: 7));
+
+    // app_usage 패키지를 통해 데이터 패치
+    List<AppUsageInfo> infoList = await AppUsage().getAppUsage(startDate, endDate);
+
+    // 사용 시간이 높은 순으로 정렬 (가장 많이 사용한 앱을 보여주기 위함)
+    infoList.sort((a, b) => b.usage.inSeconds.compareTo(a.usage.inSeconds));
+
+    return infoList;
+  } catch (exception) {
+    print('권한이 없거나 에러가 발생했습니다: $exception');
+    return [];
+  }
+}
 
 class Page7DaysReportCopyModel
     extends FlutterFlowModel<Page7DaysReportCopyWidget> {

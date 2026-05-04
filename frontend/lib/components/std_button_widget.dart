@@ -8,6 +8,7 @@ import 'package:percent_indicator/percent_indicator.dart';
 import 'package:provider/provider.dart';
 import 'std_button_model.dart';
 export 'std_button_model.dart';
+import '/flutter_flow/flutter_flow_util.dart';
 
 class StdButtonWidget extends StatefulWidget {
   const StdButtonWidget({
@@ -21,7 +22,7 @@ class StdButtonWidget extends StatefulWidget {
     bool? loading,
     bool? full_width,
   })  : this.content = content ?? '회원가입',
-        this.color = color ?? FlutterFlowTheme.of(context).primary,
+        this.color = color ?? Colors.blue,
         this.icon = icon ?? false,
         this.icon_end = icon_end ?? false,
         this.size = size ?? 'small',
@@ -149,7 +150,7 @@ class _StdButtonWidgetState extends State<StdButtonWidget> {
                 mainAxisAlignment: MainAxisAlignment.start,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  if (widget!.icon ? true : false) widget!.icon,
+                  // if (widget!.icon ? true : false) widget!.icon,
                   Text(
                     valueOrDefault<String>(
                       widget!.content,
@@ -187,8 +188,9 @@ class _StdButtonWidgetState extends State<StdButtonWidget> {
                           lineHeight: 1.3,
                         ),
                   ),
-                  if (widget!.icon_end ? true : false) widget!.icon_end,
-                ].divide(SizedBox(width: 8.0)),
+                  // if (widget!.icon_end ? true : false) widget!.icon_end,
+                // ].divide(SizedBox(width: 8.0)),
+                ],
               ),
             ),
           ),

@@ -9,24 +9,23 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'app_usage_item_kr_model.dart';
 export 'app_usage_item_kr_model.dart';
+import 'dart:typed_data';
 
 class AppUsageItemKrWidget extends StatefulWidget {
   const AppUsageItemKrWidget({
     super.key,
-    String? app_name,
-    String? category,
-    String? icon_name,
-    String? time,
-  })  : this.app_name = app_name ?? 'YouTube',
-        this.category = category ?? '엔터테인먼트',
-        this.icon_name =
-            icon_name ?? 'https://cdn.simpleicons.org/youtube/584738.svg',
-        this.time = time ?? '12시간 40분';
+    this.app_name = 'YouTube',
+    this.category = '엔터테인먼트',
+    this.icon_name = 'https://cdn.simpleicons.org/youtube/584738.svg',
+    this.time = '12시간 40분',
+    this.iconBytes, // 1. 여기에 iconBytes를 추가해서 입구를 뚫어줍니다!
+  });
 
   final String app_name;
   final String category;
   final String icon_name;
   final String time;
+  final Uint8List? iconBytes;
 
   @override
   State<AppUsageItemKrWidget> createState() => _AppUsageItemKrWidgetState();
@@ -86,9 +85,16 @@ class _AppUsageItemKrWidgetState extends State<AppUsageItemKrWidget> {
                       shape: BoxShape.rectangle,
                     ),
                     alignment: AlignmentDirectional(0.0, 0.0),
-                    child: SvgPicture.network(
+                    child: widget.iconBytes != null && widget.iconBytes!.isNotEmpty
+                        ? Image.memory( // ✨ 기기에서 가져온 실제 아이콘(바이트 데이터) 그리기
+                      widget.iconBytes!,
+                      width: 32.0, // 크기는 디자인에 맞게 조절하세요!
+                      height: 32.0,
+                      fit: BoxFit.contain,
+                    )
+                        : SvgPicture.network( // 바이트가 없으면 기존처럼 인터넷 URL로 그리기
                       valueOrDefault<String>(
-                        widget!.icon_name,
+                        widget.icon_name,
                         'https://cdn.simpleicons.org/youtube/584738.svg',
                       ),
                       width: 24.0,

@@ -8,6 +8,7 @@ import 'package:percent_indicator/percent_indicator.dart';
 import 'package:provider/provider.dart';
 import 'std_button2b7b0cb0_model.dart';
 export 'std_button2b7b0cb0_model.dart';
+import '/flutter_flow/flutter_flow_util.dart';
 
 class StdButton2b7b0cb0Widget extends StatefulWidget {
   const StdButton2b7b0cb0Widget({
@@ -119,7 +120,7 @@ class _StdButton2b7b0cb0WidgetState extends State<StdButton2b7b0cb0Widget> {
               mainAxisAlignment: MainAxisAlignment.start,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                if (widget!.icon == 'true' ? true : false) widget!.icon,
+                // if (widget!.icon == 'true' ? true : false) widget!.icon,
                 Text(
                   valueOrDefault<String>(
                     widget!.content,
@@ -154,7 +155,8 @@ class _StdButton2b7b0cb0WidgetState extends State<StdButton2b7b0cb0Widget> {
                       ),
                 ),
                 if (widget!.icon_end == true ? true : false) widget!.icon_end!,
-              ].divide(SizedBox(width: 8.0)),
+              // ].divide(SizedBox(width: 8.0)),
+              ],
             ),
           ),
           if (widget!.loading == true ? true : false)
