@@ -626,3 +626,40 @@ OpenAI 설정이 없거나 호출에 실패하면 서버는 로컬 대체 분석
 OPENAI_API_KEY=...
 OPENAI_MODEL=gpt-5.4-mini
 ```
+
+### 사용자 설정 API
+
+현재 설정은 앱별 제한이 아니라 목표 카테고리의 하루 총 사용 목표를 저장한다.
+기본 목표 카테고리는 `SNS`, `GAME`, `ENTERTAINMENT`이다.
+
+```http
+GET /settings?userId=test_user_001
+```
+
+```http
+PUT /settings?userId=test_user_001
+Content-Type: application/json
+```
+
+```json
+{
+  "dailyUsageGoalMinutes": 240,
+  "targetCategories": ["SNS", "GAME", "ENTERTAINMENT"],
+  "analysisTone": "SOFT",
+  "analysisSchedules": [
+    {
+      "scheduleId": "focus-1",
+      "mode": "FOCUS",
+      "title": "공부 시간",
+      "startTime": "09:00",
+      "endTime": "11:00",
+      "enabled": true
+    }
+  ]
+}
+```
+
+`analysisTone`은 `SOFT`, `FRIENDLY`, `DIRECT` 중 하나를 사용한다.
+각각 부드러운 말투, 친한 친구 말투, 직설적인 말투로 AI 분석 문장을 생성한다.
+`analysisSchedules`의 `FOCUS`와 `SLEEP`은 앱 차단용이 아니라 AI 분석 참고용 맥락이다.
+`POST /analysis/daily`는 사용 로그 요약과 함께 이 사용자 설정을 읽어서 OpenAI 분석에 전달한다.

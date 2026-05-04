@@ -1,61 +1,60 @@
+from enum import Enum
 from typing import List
-from pydantic import BaseModel
+
+from pydantic import BaseModel, Field
+
+from app.schemas.common import AppCategory
 
 
-#############################
-# 목표 설정 화면 데이터 타입
-##############################
-
-# 앱별 사용 제한 설정
-class AppLimit(BaseModel):
-    appName: str
-    packageName: str
-    category: str
-    limitMinutes: int
-    enabled: bool
+class AnalysisMode(str, Enum):
+    FOCUS = "FOCUS"
+    SLEEP = "SLEEP"
 
 
-# 집중모드/수면모드 같은 시간대 설정
-class FocusSchedule(BaseModel):
+class AnalysisTone(str, Enum):
+    SOFT = "SOFT"
+    FRIENDLY = "FRIENDLY"
+    DIRECT = "DIRECT"
+
+
+class AnalysisSchedule(BaseModel):
     scheduleId: str
+    mode: AnalysisMode
     title: str
     startTime: str
     endTime: str
-    enabled: bool
+    enabled: bool = True
 
 
-# 사용자 설정 전체 데이터
+def default_target_categories() -> List[AppCategory]:
+    return [
+        AppCategory.SNS,
+        AppCategory.GAME,
+        AppCategory.ENTERTAINMENT,
+    ]
+
+
 class UserSettings(BaseModel):
     userId: str
-
-    # 하루 전체 화면 사용 목표, 시간 / 단위:분
-    dailyScreenTimeGoalMinutes: int
-
-    # 앱별 제한 목록
-    appLimits: List[AppLimit]
-
-    # 집중모드/수면모드 일정 목록록
-    focusSchedules: List[FocusSchedule]
-
-    # 설정 마지막 수정 시각
+    dailyUsageGoalMinutes: int = Field(..., gt=0)
+    targetCategories: List[AppCategory] = Field(default_factory=default_target_categories)
+    analysisSchedules: List[AnalysisSchedule] = Field(default_factory=list)
+    analysisTone: AnalysisTone = AnalysisTone.SOFT
     updatedAt: str
 
 
-
-# 사용자 설정 수정 요청
 class UserSettingsUpdateRequest(BaseModel):
-    dailyScreenTimeGoalMinutes: int
-    appLimits: List[AppLimit]
-    focusSchedules: List[FocusSchedule]
+    dailyUsageGoalMinutes: int = Field(..., gt=0)
+    targetCategories: List[AppCategory] = Field(default_factory=default_target_categories)
+    analysisSchedules: List[AnalysisSchedule] = Field(default_factory=list)
+    analysisTone: AnalysisTone = AnalysisTone.SOFT
 
 
-# 사용자 설정 조회 응답
 class UserSettingsResponse(BaseModel):
     success: bool = True
     settings: UserSettings
 
 
-# 사용자 설정 저장/수정 응답
 class UserSettingsUpdateResponse(BaseModel):
     success: bool = True
     message: str

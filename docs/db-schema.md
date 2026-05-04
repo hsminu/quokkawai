@@ -501,3 +501,31 @@ FIREBASE_PROJECT_ID=your-firebase-project-id
 usage_logs
 app_categories
 ```
+
+### user_settings 컬렉션
+
+사용자별 분석 설정은 `user_settings/{userId}` 문서에 저장한다.
+앱별 제한값은 저장하지 않고, 목표 카테고리의 하루 총 사용 목표를 저장한다.
+
+```json
+{
+  "userId": "test_user_001",
+  "dailyUsageGoalMinutes": 240,
+  "targetCategories": ["SNS", "GAME", "ENTERTAINMENT"],
+  "analysisTone": "SOFT",
+  "analysisSchedules": [
+    {
+      "scheduleId": "sleep-1",
+      "mode": "SLEEP",
+      "title": "수면 시간",
+      "startTime": "23:30",
+      "endTime": "07:00",
+      "enabled": true
+    }
+  ],
+  "updatedAt": "2026-05-04T12:00:00+00:00"
+}
+```
+
+`analysisTone`은 AI 분석 문장의 말투를 정한다. 허용 값은 `SOFT`, `FRIENDLY`, `DIRECT`이다.
+`analysisSchedules`는 차단 규칙이 아니라 AI가 사용 패턴을 해석할 때 참고하는 시간대 설정이다.

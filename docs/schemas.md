@@ -672,3 +672,31 @@ ETC
   "topApps": []
 }
 ```
+
+## 사용자 설정 스키마
+
+`UserSettings`는 앱별 제한이 아니라 목표 카테고리의 하루 총 사용 목표를 표현한다.
+
+```json
+{
+  "userId": "test_user_001",
+  "dailyUsageGoalMinutes": 240,
+  "targetCategories": ["SNS", "GAME", "ENTERTAINMENT"],
+  "analysisTone": "SOFT",
+  "analysisSchedules": [
+    {
+      "scheduleId": "focus-1",
+      "mode": "FOCUS",
+      "title": "공부 시간",
+      "startTime": "09:00",
+      "endTime": "11:00",
+      "enabled": true
+    }
+  ],
+  "updatedAt": "2026-05-04T12:00:00+00:00"
+}
+```
+
+`UserSettingsUpdateRequest`는 `dailyUsageGoalMinutes`, `targetCategories`, `analysisSchedules`를 받는다.
+`analysisTone`은 `SOFT`, `FRIENDLY`, `DIRECT` 중 하나를 받는다.
+`mode`는 `FOCUS` 또는 `SLEEP`만 허용한다.

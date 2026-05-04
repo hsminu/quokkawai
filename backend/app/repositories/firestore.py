@@ -9,6 +9,7 @@ from app.repositories.defaults import (
 )
 from app.schemas.app_category import AppCategoryResponse, AppCategoryUpdateRequest
 from app.schemas.common import AppCategory
+from app.schemas.settings import UserSettings, UserSettingsUpdateRequest, default_target_categories
 from app.schemas.usage_log import UsageLogCreateItem, UsageLogResponse
 from app.services.openai_category_service import classify_app_category
 
@@ -192,11 +193,13 @@ class FirestoreUsageLogRepository:
         document.set(data, merge=True)
         return usage_log
 
-    def list_by_user_and_date(self, user_id: str, date: str) -> list[UsageLogResponse]:
-        # 특정 사용자의 특정 날짜 로그만 조회한다.
+    def list_by_user_and_date(self, user_id: str, date: str, end_date: str | None = None) -> list[UsageLogResponse]:
+        # 특정 사용자의 특정 날짜(혹은 기간) 로그를 조회한다.
+        target_end = end_date or date
         snapshots = (
             self._collection.where("userId", "==", user_id)
-            .where("date", "==", date)
+            .where("date", ">=", date)
+            .where("date", "<=", target_end)
             .stream()
         )
         logs = [
@@ -204,6 +207,8 @@ class FirestoreUsageLogRepository:
             for snapshot in snapshots
             if snapshot.to_dict()
         ]
+        if end_date:
+            return sorted(logs, key=lambda item: item.date)
         return sorted(logs, key=lambda item: item.usageSeconds, reverse=True)
 
     def _from_document(self, data: dict[str, Any] | None) -> UsageLogResponse:
@@ -220,6 +225,69 @@ class FirestoreUsageLogRepository:
             usageSeconds=int(data["usageSeconds"]),
             openCount=data.get("openCount"),
         )
+
+
+class FirestoreUserSettingsRepository:
+    def __init__(self, db: Any) -> None:
+        self._collection = db.collection("user_settings")
+
+    def get_by_user_id(self, user_id: str) -> UserSettings:
+        snapshot = self._collection.document(user_id).get()
+        if not snapshot.exists:
+            settings = _build_default_settings(user_id)
+            self._save(settings)
+            return settings
+
+        data = snapshot.to_dict()
+        if not data:
+            settings = _build_default_settings(user_id)
+            self._save(settings)
+            return settings
+
+        return self._from_document(data)
+
+    def save(self, user_id: str, request: UserSettingsUpdateRequest) -> UserSettings:
+        settings = UserSettings(
+            userId=user_id,
+            dailyUsageGoalMinutes=request.dailyUsageGoalMinutes,
+            targetCategories=request.targetCategories,
+            analysisSchedules=request.analysisSchedules,
+            analysisTone=request.analysisTone,
+            updatedAt=_now_iso(),
+        )
+        self._save(settings)
+        return settings
+
+    def _save(self, settings: UserSettings) -> None:
+        data = settings.model_dump(mode="json")
+        self._collection.document(settings.userId).set(data, merge=True)
+
+    def _from_document(self, data: dict[str, Any]) -> UserSettings:
+        return UserSettings(
+            userId=data["userId"],
+            dailyUsageGoalMinutes=int(data["dailyUsageGoalMinutes"]),
+            targetCategories=data.get("targetCategories") or default_target_categories(),
+            analysisSchedules=data.get("analysisSchedules") or [],
+            analysisTone=data.get("analysisTone") or "SOFT",
+            updatedAt=data["updatedAt"],
+        )
+
+
+def _build_default_settings(user_id: str) -> UserSettings:
+    return UserSettings(
+        userId=user_id,
+        dailyUsageGoalMinutes=240,
+        targetCategories=default_target_categories(),
+        analysisSchedules=[],
+        analysisTone="SOFT",
+        updatedAt=_now_iso(),
+    )
+
+
+def _now_iso() -> str:
+    from datetime import datetime, timezone
+
+    return datetime.now(timezone.utc).isoformat()
 
 
 def _server_timestamp() -> Any:

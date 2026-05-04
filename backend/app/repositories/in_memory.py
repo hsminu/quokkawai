@@ -5,6 +5,7 @@ from app.repositories.defaults import (
 )
 from app.schemas.app_category import AppCategoryResponse, AppCategoryUpdateRequest
 from app.schemas.common import AppCategory
+from app.schemas.settings import UserSettings, UserSettingsUpdateRequest, default_target_categories
 from app.schemas.usage_log import UsageLogCreateItem, UsageLogResponse
 from app.services.openai_category_service import classify_app_category
 
@@ -107,11 +108,53 @@ class InMemoryUsageLogRepository:
         self._usage_logs[usage_log_id] = usage_log
         return usage_log
 
-    def list_by_user_and_date(self, user_id: str, date: str) -> list[UsageLogResponse]:
-        # 특정 사용자/날짜 로그만 골라 사용 시간이 긴 순서로 반환한다.
+    def list_by_user_and_date(self, user_id: str, date: str, end_date: str | None = None) -> list[UsageLogResponse]:
+        # 특정 사용자/날짜(혹은 기간) 로그를 골라 반환한다.
+        target_end = end_date or date
         logs = [
             log
             for log in self._usage_logs.values()
-            if log.userId == user_id and log.date == date
+            if log.userId == user_id and date <= log.date <= target_end
         ]
+        if end_date:
+            return sorted(logs, key=lambda item: item.date)
         return sorted(logs, key=lambda item: item.usageSeconds, reverse=True)
+
+
+class InMemoryUserSettingsRepository:
+    def __init__(self) -> None:
+        self._settings: dict[str, UserSettings] = {}
+
+    def get_by_user_id(self, user_id: str) -> UserSettings:
+        if user_id not in self._settings:
+            self._settings[user_id] = _build_default_settings(user_id)
+        return self._settings[user_id]
+
+    def save(self, user_id: str, request: UserSettingsUpdateRequest) -> UserSettings:
+        settings = UserSettings(
+            userId=user_id,
+            dailyUsageGoalMinutes=request.dailyUsageGoalMinutes,
+            targetCategories=request.targetCategories,
+            analysisSchedules=request.analysisSchedules,
+            analysisTone=request.analysisTone,
+            updatedAt=_now_iso(),
+        )
+        self._settings[user_id] = settings
+        return settings
+
+
+def _build_default_settings(user_id: str) -> UserSettings:
+    return UserSettings(
+        userId=user_id,
+        dailyUsageGoalMinutes=240,
+        targetCategories=default_target_categories(),
+        analysisSchedules=[],
+        analysisTone="SOFT",
+        updatedAt=_now_iso(),
+    )
+
+
+def _now_iso() -> str:
+    from datetime import datetime, timezone
+
+    return datetime.now(timezone.utc).isoformat()
