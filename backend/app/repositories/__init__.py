@@ -12,7 +12,7 @@ def _create_repositories():
         from app.repositories.firestore import (
             FirestoreAppCategoryRepository,
             FirestoreUsageLogRepository,
-        FirestoreUserSettingsRepository,
+            FirestoreUserSettingsRepository,
             create_firestore_client,
         )
 
