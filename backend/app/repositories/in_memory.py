@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from app.repositories.defaults import (
     DEFAULT_APP_CATEGORIES,
     SYSTEM_PACKAGE_PREFIXES,
@@ -5,6 +7,7 @@ from app.repositories.defaults import (
 )
 from app.schemas.app_category import AppCategoryResponse, AppCategoryUpdateRequest
 from app.schemas.common import AppCategory
+from app.schemas.settings import UserSettings, UserSettingsUpdateRequest
 from app.schemas.usage_log import UsageLogCreateItem, UsageLogResponse
 from app.services.openai_category_service import classify_app_category
 
@@ -103,6 +106,7 @@ class InMemoryUsageLogRepository:
             category=category.category,
             usageSeconds=item.usageSeconds,
             openCount=item.openCount,
+            scheduleId=item.scheduleId,
         )
         self._usage_logs[usage_log_id] = usage_log
         return usage_log
@@ -118,3 +122,25 @@ class InMemoryUsageLogRepository:
         if end_date:
             return sorted(logs, key=lambda item: item.date)
         return sorted(logs, key=lambda item: item.usageSeconds, reverse=True)
+
+
+class InMemoryUserSettingsRepository:
+    def __init__(self) -> None:
+        self._settings: dict[str, UserSettings] = {}
+
+    def get_settings(self, user_id: str) -> UserSettings | None:
+        return self._settings.get(user_id)
+
+    def update_settings(self, user_id: str, request: UserSettingsUpdateRequest) -> UserSettings:
+        now = datetime.utcnow().isoformat()
+        settings = UserSettings(
+            userId=user_id,
+            dailyScreenTimeGoalMinutes=request.dailyScreenTimeGoalMinutes,
+            categoryGoals=request.categoryGoals,
+            appLimits=request.appLimits,
+            focusSchedules=request.focusSchedules,
+            coachTone=request.coachTone,
+            updatedAt=now,
+        )
+        self._settings[user_id] = settings
+        return settings

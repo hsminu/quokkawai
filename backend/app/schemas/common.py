@@ -42,3 +42,10 @@ T = TypeVar("T")
 # 공통 리스트 응답
 class ListResponse(BaseModel, Generic[T]):
     items: List[T]
+
+
+# AI 코치 말투 설정 enum
+class CoachToneType(str, Enum):
+    FRIENDLY = "FRIENDLY"
+    STRICT = "STRICT"
+    INNOCENT = "INNOCENT"

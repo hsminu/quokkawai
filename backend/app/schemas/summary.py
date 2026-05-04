@@ -19,9 +19,16 @@ class CategoryUsageResponse(BaseModel):
     usageSeconds: int
 
 
+# 집중/수면 시간대별 사용량 요약
+class ScheduleUsageResponse(BaseModel):
+    scheduleId: str
+    usageSeconds: int
+
+
 # 하루 사용량 요약 응답
 class DailySummaryResponse(BaseModel):
     date: str
     totalUsageSeconds: int
     topApps: List[TopAppUsageResponse]
     categorySummaries: List[CategoryUsageResponse]
+    scheduleSummaries: List[ScheduleUsageResponse] = []

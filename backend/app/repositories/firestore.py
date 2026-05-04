@@ -1,3 +1,4 @@
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -9,6 +10,7 @@ from app.repositories.defaults import (
 )
 from app.schemas.app_category import AppCategoryResponse, AppCategoryUpdateRequest
 from app.schemas.common import AppCategory
+from app.schemas.settings import UserSettings, UserSettingsUpdateRequest
 from app.schemas.usage_log import UsageLogCreateItem, UsageLogResponse
 from app.services.openai_category_service import classify_app_category
 
@@ -178,6 +180,7 @@ class FirestoreUsageLogRepository:
             category=category.category,
             usageSeconds=item.usageSeconds,
             openCount=item.openCount,
+            scheduleId=item.scheduleId,
         )
 
         # userId + date + packageName 기준 하루 요약 로그를 저장한다.
@@ -223,8 +226,37 @@ class FirestoreUsageLogRepository:
             category=AppCategory(data["category"]),
             usageSeconds=int(data["usageSeconds"]),
             openCount=data.get("openCount"),
+            scheduleId=data.get("scheduleId"),
         )
 
+
+
+class FirestoreUserSettingsRepository:
+    def __init__(self, db: Any) -> None:
+        self._collection = db.collection("user_settings")
+
+    def get_settings(self, user_id: str) -> UserSettings | None:
+        snapshot = self._collection.document(user_id).get()
+        if snapshot.exists:
+            data = snapshot.to_dict()
+            if data:
+                return UserSettings(**data)
+        return None
+
+    def update_settings(self, user_id: str, request: UserSettingsUpdateRequest) -> UserSettings:
+        now = datetime.utcnow().isoformat()
+        settings = UserSettings(
+            userId=user_id,
+            dailyScreenTimeGoalMinutes=request.dailyScreenTimeGoalMinutes,
+            categoryGoals=request.categoryGoals,
+            appLimits=request.appLimits,
+            focusSchedules=request.focusSchedules,
+            coachTone=request.coachTone,
+            updatedAt=now,
+        )
+        data = settings.model_dump(mode="json")
+        self._collection.document(user_id).set(data, merge=True)
+        return settings
 
 def _server_timestamp() -> Any:
     # Firestore 서버 시간을 createdAt/updatedAt에 사용한다.

@@ -1,6 +1,8 @@
 from typing import List
 from pydantic import BaseModel
 
+from app.schemas.common import CoachToneType
+
 ###########################################
 # 홈 리포트, 7일 리포트, AI 코칭 리포트 타입
 ###########################################
@@ -72,6 +74,7 @@ class WeeklyReport(BaseModel):
     userId: str
     startDate: str
     endDate: str
+    coachTone: CoachToneType = CoachToneType.FRIENDLY
     averageScreenTimeMinutes: int
     changeRateFromLastWeek: int | None = None
     unlockCount: int | None = None

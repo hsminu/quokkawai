@@ -182,7 +182,11 @@ Phase 1 개발 단계:
   "packageName": "com.google.android.youtube",
   "appName": "YouTube",
   "usageSeconds": 5400,
-  "openCount": 12
+  "openCount": 12,
+  "scheduleId": "sleep_normal"
+  "usageSeconds": 5400,
+  "openCount": 12,
+  "scheduleId": "sleep_normal"
 }
 ```
 
@@ -213,7 +217,8 @@ Phase 2 인증 적용 이후:
     "appName": "YouTube",
     "category": "ENTERTAINMENT",
     "usageSeconds": 5400,
-    "openCount": 12
+    "openCount": 12,
+    "scheduleId": "sleep_normal"
   }
 }
 ```
@@ -334,7 +339,8 @@ GET /usage-logs?userId=test_user_001&date=2026-05-01
       "appName": "YouTube",
       "category": "ENTERTAINMENT",
       "usageSeconds": 5400,
-      "openCount": 12
+      "openCount": 12,
+      "scheduleId": "sleep_normal"
     },
     {
       "usageLogId": "test_user_001_2026-05-01_com.instagram.android",
@@ -345,6 +351,12 @@ GET /usage-logs?userId=test_user_001&date=2026-05-01
       "category": "SNS",
       "usageSeconds": 3600,
       "openCount": 20
+    }
+  ],
+  "scheduleSummaries": [
+    {
+      "scheduleId": "sleep_normal",
+      "usageSeconds": 1800
     }
   ]
 }
@@ -440,7 +452,8 @@ Phase 1 개발 단계:
 ```json
 {
   "userId": "test_user_001",
-  "date": "2026-05-01"
+  "date": "2026-05-01",
+  "coachTone": "FRIENDLY"
 }
 ```
 
@@ -448,7 +461,8 @@ Phase 2 인증 적용 이후:
 
 ```json
 {
-  "date": "2026-05-01"
+  "date": "2026-05-01",
+  "coachTone": "FRIENDLY"
 }
 ```
 
@@ -496,9 +510,123 @@ Phase 2 인증 적용 이후:
 
 ---
 
-## 7. App Categories API
+## 6.2 주간 AI 분석 요청
 
-## 7.1 앱 카테고리 목록 조회
+### Endpoint
+
+```http
+POST /analysis/weekly
+```
+
+---
+
+### Request Body
+
+```json
+{
+  "userId": "test_user_001",
+  "startDate": "2026-04-25",
+  "endDate": "2026-05-01",
+  "coachTone": "STRICT"
+}
+```
+
+---
+
+### Response
+
+```json
+{
+  "success": true,
+  "message": "weekly analysis created",
+  "report": {
+    "reportId": "weekly_a1b2c3d4",
+    "userId": "test_user_001",
+    "startDate": "2026-04-25",
+    "endDate": "2026-05-01",
+    "summaryTitle": "엔터테인먼트 비중이 높았던 한 주",
+    "summaryMessage": "지난주보다 화면 켜짐 시간이 늘어났어요.",
+    "focusScore": 65,
+    "screenTimeDeltaMinutes": 120,
+    "weeklyTrend": [
+      { "day": "월", "date": "2026-04-25", "minutes": 180 }
+    ],
+    "recommendations": [
+      {
+        "title": "자기 전 스마트폰 멀리 두기",
+        "description": "수면의 질을 위해 침대와 떨어진 곳에 충전하세요."
+      }
+    ],
+    "weeklyReflectionPrompt": "이번 주에 낭비된 시간은 언제인가요?",
+    "createdAt": "2026-05-01T23:45:00.000000"
+  }
+}
+```
+
+---
+
+## 7. User Settings & Modes API
+
+## 7.1 디톡스 모드 목록 조회
+
+### Endpoint
+
+```http
+GET /modes
+```
+
+### Description
+
+초급/중급/고급 디톡스 모드의 설정 프리셋을 반환한다.
+클라이언트는 이 중 하나를 선택해 `PUT /settings`로 저장할 수 있다.
+
+---
+
+## 7.2 사용자 설정 조회
+
+### Endpoint
+
+```http
+GET /settings?userId=test_user_001
+```
+
+### Description
+
+사용자의 하루 목표 시간, 카테고리 목표, 수면 스케줄, AI 코치 말투를 조회한다.
+
+---
+
+## 7.3 사용자 설정 업데이트
+
+### Endpoint
+
+```http
+PUT /settings?userId=test_user_001
+```
+
+### Request Body
+
+```json
+{
+  "dailyScreenTimeGoalMinutes": 240,
+  "categoryGoals": [
+    {
+      "category": "ENTERTAINMENT",
+      "limitMinutes": 60,
+      "enabled": true
+    }
+  ],
+  "appLimits": [],
+  "focusSchedules": [],
+  "coachTone": "STRICT"
+}
+```
+
+---
+
+## 8. App Categories API
+
+## 8.1 앱 카테고리 목록 조회
 
 ### Endpoint
 
@@ -531,7 +659,7 @@ GET /app-categories
 
 ---
 
-## 7.2 앱 카테고리 수정
+## 8.2 앱 카테고리 수정
 
 ### Endpoint
 
@@ -568,7 +696,7 @@ PUT /app-categories/{packageName}
 
 ---
 
-## 8. 공통 에러 응답
+## 9. 공통 에러 응답
 
 ```json
 {
@@ -582,7 +710,7 @@ PUT /app-categories/{packageName}
 
 ---
 
-## 8.1 Error Code
+## 9.1 Error Code
 
 | 코드 | 의미 |
 |---|---|

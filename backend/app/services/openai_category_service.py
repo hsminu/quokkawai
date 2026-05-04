@@ -16,25 +16,33 @@ def classify_app_category(package_name: str, app_name: str) -> AppCategory | Non
 
     try:
         # 앱 이름과 패키지명만 보내서 enum 하나만 받는다.
-        response = client.responses.create(
+        response = client.chat.completions.create(
             model=settings.openai_model,
-            instructions=(
-                "Android 앱을 정확히 하나의 카테고리로 분류하세요. "
-                "설명 없이 enum 값만 반환하세요."
-            ),
-            input=(
-                "다음 enum 중 하나를 고르세요: "
-                "STUDY, PRODUCTIVITY, COMMUNICATION, ENTERTAINMENT, GAME, SNS, "
-                "SYSTEM, ETC.\n\n"
-                f"앱 이름: {app_name}\n"
-                f"패키지명: {package_name}"
-            ),
-            max_output_tokens=20,
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "Android 앱을 정확히 하나의 카테고리로 분류하세요. "
+                        "설명 없이 enum 값만 반환하세요."
+                    ),
+                },
+                {
+                    "role": "user",
+                    "content": (
+                        "다음 enum 중 하나를 고르세요: "
+                        "STUDY, PRODUCTIVITY, COMMUNICATION, ENTERTAINMENT, GAME, SNS, "
+                        "SYSTEM, ETC.\n\n"
+                        f"앱 이름: {app_name}\n"
+                        f"패키지명: {package_name}"
+                    ),
+                },
+            ],
+            max_tokens=20,
         )
     except Exception:
         return None
 
-    return _parse_category(response.output_text)
+    return _parse_category(response.choices[0].message.content)
 
 
 def _parse_category(value: str) -> AppCategory | None:

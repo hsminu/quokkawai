@@ -12,6 +12,7 @@ class UsageLogCreateItem(BaseModel):
     appName: str
     usageSeconds: int = Field(..., gt=0)
     openCount: int | None = Field(default=None, ge=0)
+    scheduleId: str | None = Field(default=None, description="집중/수면모드 등 활성화된 스케줄 ID")
 
 
 # Phase 1 개발용: userId를 body로 받는 단일 저장 요청
@@ -35,6 +36,7 @@ class UsageLogResponse(BaseModel):
     category: AppCategory
     usageSeconds: int
     openCount: int | None = None
+    scheduleId: str | None = None
 
 
 # 단일 저장 응답

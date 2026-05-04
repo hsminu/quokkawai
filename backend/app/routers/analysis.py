@@ -17,7 +17,7 @@ def create_daily_analysis(request: DailyAnalysisRequest) -> DailyAnalysisRespons
         date=request.date,
     )
     summary = build_daily_summary(date=request.date, logs=logs)
-    return build_daily_analysis(summary)
+    return build_daily_analysis(summary, request.coachTone)
 
 @router.post("/weekly", response_model=AICoachingReportCreateResponse)
 def create_weekly_analysis(request: AICoachingReportCreateRequest) -> AICoachingReportCreateResponse:

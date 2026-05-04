@@ -3,7 +3,7 @@ from collections import defaultdict
 from datetime import datetime
 
 from app.schemas.analysis import DailyAnalysisResponse
-from app.schemas.common import AppCategory
+from app.schemas.common import AppCategory, CoachToneType
 from app.schemas.report import (
     AICoachingReport,
     AICoachingReportCreateRequest,
@@ -27,11 +27,12 @@ DISTRACTION_CATEGORIES = {
 }
 
 
-def build_daily_analysis(summary: DailySummaryResponse) -> DailyAnalysisResponse:
+def build_daily_analysis(summary: DailySummaryResponse, coach_tone: CoachToneType) -> DailyAnalysisResponse:
     main_problem = _select_main_problem(summary)
     openai_analysis = build_openai_daily_analysis(
         summary=summary,
         fallback_main_problem=main_problem,
+        coach_tone=coach_tone,
     )
     if openai_analysis is not None:
         return openai_analysis
