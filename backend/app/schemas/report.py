@@ -113,6 +113,7 @@ class AICoachingReportCreateRequest(BaseModel):
     userId: str
     startDate: str
     endDate: str
+    coachTone: CoachToneType = CoachToneType.FRIENDLY
 
 
 # AI 코칭 리포트 조회 응답

@@ -45,8 +45,10 @@ def classify_app_category(package_name: str, app_name: str) -> AppCategory | Non
     return _parse_category(response.choices[0].message.content)
 
 
-def _parse_category(value: str) -> AppCategory | None:
+def _parse_category(value: str | None) -> AppCategory | None:
     # 모델이 설명을 붙이지 않았다는 가정하에 enum 값만 정리한다.
+    if not value:
+        return None
     cleaned = value.strip().strip('"').strip("'").upper()
     try:
         return AppCategory(cleaned)

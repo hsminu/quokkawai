@@ -153,8 +153,10 @@ def _parse_category(value: object) -> AppCategory | None:
         return None
 
 
-def _strip_json_fence(text: str) -> str:
+def _strip_json_fence(text: str | None) -> str:
     # 혹시 ```json 코드블록으로 오면 JSON 본문만 남긴다.
+    if not text:
+        return ""
     stripped = text.strip()
     if stripped.startswith("```json"):
         return stripped.removeprefix("```json").removesuffix("```").strip()
