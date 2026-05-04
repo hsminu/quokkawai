@@ -10,3 +10,7 @@ backend/.env.*
 !backend/.env.example
 backend/*service-account*.json
 backend/firebase-credentials.json
+.dart_tool/
+frontend/.dart_tool/
+frontend/build/
+build/
