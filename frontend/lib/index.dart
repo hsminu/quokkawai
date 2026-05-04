@@ -1,0 +1,19 @@
+// Export pages
+export '/pages/page7_days_report_copy/page7_days_report_copy_widget.dart'
+    show Page7DaysReportCopyWidget;
+export '/pages/a_i_coaching_report_copy/a_i_coaching_report_copy_widget.dart'
+    show AICoachingReportCopyWidget;
+export '/pages/loading_page_copy/loading_page_copy_widget.dart'
+    show LoadingPageCopyWidget;
+export '/pages/set_goals_page_copy/set_goals_page_copy_widget.dart'
+    show SetGoalsPageCopyWidget;
+export '/pages/friends_page_copy/friends_page_copy_widget.dart'
+    show FriendsPageCopyWidget;
+export '/pages/settings_page_copy/settings_page_copy_widget.dart'
+    show SettingsPageCopyWidget;
+export '/pages/onboarding_copy/onboarding_copy_widget.dart'
+    show OnboardingCopyWidget;
+export '/pages/home_page_nice_copy/home_page_nice_copy_widget.dart'
+    show HomePageNiceCopyWidget;
+export '/pages/home_page_angry_copy/home_page_angry_copy_widget.dart'
+    show HomePageAngryCopyWidget;
