@@ -17,6 +17,7 @@ from app.schemas.summary import (
 )
 from app.schemas.usage_log import (
     UsageLogBulkCreateRequest,
+    UsageLogBulkCreateMeRequest,
     UsageLogBulkCreateResponse,
     UsageLogCreateItem,
     UsageLogCreateRequest,
@@ -42,6 +43,7 @@ __all__ = [
     "GoogleLoginResponse",
     "TopAppUsageResponse",
     "UsageLogBulkCreateRequest",
+    "UsageLogBulkCreateMeRequest",
     "UsageLogBulkCreateResponse",
     "UsageLogCreateItem",
     "UsageLogCreateRequest",

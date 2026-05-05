@@ -1,26 +1,62 @@
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Depends, Query
 
+from app.dependencies import get_current_user
 from app.repositories import usage_log_repository
 from app.schemas.usage_log import (
+    UsageLogBulkCreateMeRequest,
     UsageLogBulkCreateRequest,
     UsageLogBulkCreateResponse,
+    UsageLogCreateItem,
     UsageLogCreateRequest,
     UsageLogCreateResponse,
     UsageLogListResponse,
 )
+from app.schemas.user import UserResponse
 
 
 router = APIRouter(prefix="/usage-logs", tags=["usage-logs"])
 
 
-# 앱 하나의 하루 사용 로그 저장
+@router.post("/me", response_model=UsageLogCreateResponse)
+def create_my_usage_log(
+    request: UsageLogCreateItem,
+    current_user: UserResponse = Depends(get_current_user),
+) -> UsageLogCreateResponse:
+    usage_log = usage_log_repository.save(user_id=current_user.userId, item=request)
+    return UsageLogCreateResponse(message="usage log saved", usageLog=usage_log)
+
+
+@router.post("/me/bulk", response_model=UsageLogBulkCreateResponse)
+def create_my_usage_logs_bulk(
+    request: UsageLogBulkCreateMeRequest,
+    current_user: UserResponse = Depends(get_current_user),
+) -> UsageLogBulkCreateResponse:
+    for log in request.logs:
+        usage_log_repository.save(user_id=current_user.userId, item=log)
+    return UsageLogBulkCreateResponse(
+        message="usage logs saved",
+        savedCount=len(request.logs),
+    )
+
+
+@router.get("/me", response_model=UsageLogListResponse)
+def list_my_usage_logs(
+    date: str = Query(...),
+    current_user: UserResponse = Depends(get_current_user),
+) -> UsageLogListResponse:
+    logs = usage_log_repository.list_by_user_and_date(
+        user_id=current_user.userId,
+        date=date,
+    )
+    return UsageLogListResponse(date=date, logs=logs)
+
+
 @router.post("", response_model=UsageLogCreateResponse)
 def create_usage_log(request: UsageLogCreateRequest) -> UsageLogCreateResponse:
     usage_log = usage_log_repository.save(user_id=request.userId, item=request)
     return UsageLogCreateResponse(message="usage log saved", usageLog=usage_log)
 
 
-# 여러 앱의 하루 사용 로그를 한 번에 저장
 @router.post("/bulk", response_model=UsageLogBulkCreateResponse)
 def create_usage_logs_bulk(
     request: UsageLogBulkCreateRequest,
@@ -33,7 +69,6 @@ def create_usage_logs_bulk(
     )
 
 
-# 특정 날짜의 사용 로그 조회
 @router.get("", response_model=UsageLogListResponse)
 def list_usage_logs(
     userId: str = Query(...),

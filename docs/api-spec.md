@@ -103,9 +103,8 @@ Google ID Token을 서버에 전달하여 사용자를 로그인 처리한다.
 }
 ```
 
-현재 구현 단계에서는 서버 access token을 아직 발급하지 않는다.
-검증된 Google ID Token의 `sub` 값으로 `users/{userId}`를 생성하거나 갱신하고,
-반환된 `userId`를 기존 API의 `userId` 값으로 사용한다.
+현재 구현은 Google ID Token을 검증한 뒤 서버 access token을 발급한다.
+토큰 기반 API는 `Authorization: Bearer {accessToken}` 헤더에서 userId를 꺼내 쓴다.
 
 ---
 
@@ -114,6 +113,8 @@ Google ID Token을 서버에 전달하여 사용자를 로그인 처리한다.
 ```json
 {
   "success": true,
+  "accessToken": "server-access-token",
+  "tokenType": "bearer",
   "user": {
     "userId": "google_google-sub-value",
     "provider": "google",
@@ -629,6 +630,8 @@ OpenAI 설정이 없거나 호출에 실패하면 서버는 로컬 대체 분석
 OPENAI_API_KEY=...
 OPENAI_MODEL=gpt-5.4-mini
 GOOGLE_CLIENT_ID=...
+JWT_SECRET_KEY=...
+JWT_EXPIRE_MINUTES=10080
 ```
 
 ### 사용자 설정 API
@@ -667,3 +670,26 @@ Content-Type: application/json
 각각 부드러운 말투, 친한 친구 말투, 직설적인 말투로 AI 분석 문장을 생성한다.
 `analysisSchedules`의 `FOCUS`와 `SLEEP`은 앱 차단용이 아니라 AI 분석 참고용 맥락이다.
 `POST /analysis/daily`는 사용 로그 요약과 함께 이 사용자 설정을 읽어서 OpenAI 분석에 전달한다.
+
+### 토큰 기반 API
+
+로그인 응답의 `accessToken`은 다음 헤더로 보낸다.
+
+```http
+Authorization: Bearer {accessToken}
+```
+
+현재 추가된 토큰 기반 API는 다음과 같다.
+
+```http
+GET /auth/me
+POST /usage-logs/me
+POST /usage-logs/me/bulk
+GET /usage-logs/me?date=2026-05-05
+GET /settings/me
+PUT /settings/me
+POST /analysis/daily/me
+```
+
+`/usage-logs/me`, `/settings/me`, `/analysis/daily/me`는 요청 body나 query에서 `userId`를 받지 않고,
+서버가 access token에서 검증된 userId를 꺼내 사용한다.

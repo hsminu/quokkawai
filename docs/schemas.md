@@ -156,6 +156,8 @@ ETC
 ```json
 {
   "success": true,
+  "accessToken": "server-access-token",
+  "tokenType": "bearer",
   "user": {
     "userId": "google_google-sub-value",
     "provider": "google",
@@ -171,9 +173,11 @@ ETC
 | 필드 | 타입 | 필수 | 설명 |
 |---|---|---:|---|
 | success | boolean | O | 로그인 처리 성공 여부 |
+| accessToken | string | O | 서버 발급 access token |
+| tokenType | string | O | bearer |
 | user | UserResponse | O | 사용자 정보 |
 
-현재 구현 단계에서는 서버 access token을 발급하지 않는다.
+현재 구현 단계에서는 서버 access token을 발급한다.
 `userId`는 Google ID Token의 `sub` 값을 기반으로 `google_{sub}` 형식으로 만든다.
 
 ---
@@ -261,6 +265,26 @@ Phase 2 인증 적용 이후:
 |---|---|---:|---|
 | userId | string | Phase 1만 | 개발 단계용 사용자 ID |
 | logs | UsageLogCreateItem[] | O | 사용 로그 목록 |
+
+---
+
+### 6.2.1 UsageLogBulkCreateMeRequest
+
+토큰 기반 벌크 업로드에서는 `userId`를 받지 않는다.
+
+```json
+{
+  "logs": [
+    {
+      "date": "2026-05-05",
+      "packageName": "com.instagram.android",
+      "appName": "Instagram",
+      "usageSeconds": 5400,
+      "openCount": 18
+    }
+  ]
+}
+```
 
 ---
 
