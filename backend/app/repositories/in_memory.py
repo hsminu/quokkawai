@@ -165,6 +165,9 @@ class InMemoryUserRepository:
         self._users[user_id] = user
         return user
 
+    def get_by_user_id(self, user_id: str) -> UserResponse | None:
+        return self._users.get(user_id)
+
 
 def _build_google_user_id(provider_user_id: str) -> str:
     return f"google_{provider_user_id}"

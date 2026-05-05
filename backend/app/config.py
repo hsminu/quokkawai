@@ -35,6 +35,9 @@ class Settings:
     openai_model: str = os.getenv("OPENAI_MODEL", "gpt-5.4-mini")
     # Google OAuth ID Token 검증에 사용할 client id
     google_client_id: str | None = os.getenv("GOOGLE_CLIENT_ID")
+    # 서버가 발급하는 access token 서명 설정
+    jwt_secret_key: str | None = os.getenv("JWT_SECRET_KEY")
+    jwt_expire_minutes: int = int(os.getenv("JWT_EXPIRE_MINUTES", "10080"))
 
 
 settings = Settings()

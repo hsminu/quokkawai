@@ -18,4 +18,6 @@ class GoogleLoginRequest(BaseModel):
 # 로그인 성공 응답
 class GoogleLoginResponse(BaseModel):
     success: bool = True
+    accessToken: str
+    tokenType: str = "bearer"
     user: UserResponse

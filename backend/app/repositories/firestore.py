@@ -302,6 +302,21 @@ class FirestoreUserRepository:
         document.set(data, merge=True)
         return user
 
+    def get_by_user_id(self, user_id: str) -> UserResponse | None:
+        snapshot = self._collection.document(user_id).get()
+        if not snapshot.exists:
+            return None
+        data = snapshot.to_dict()
+        if not data:
+            return None
+        return UserResponse(
+            userId=data["userId"],
+            provider=data["provider"],
+            providerUserId=data["providerUserId"],
+            email=data.get("email"),
+            nickname=data.get("nickname"),
+        )
+
 
 def _build_google_user_id(provider_user_id: str) -> str:
     return f"google_{provider_user_id}"
