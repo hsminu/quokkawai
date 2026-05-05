@@ -33,6 +33,8 @@ class Settings:
     # OpenAI API 설정
     openai_api_key: str | None = os.getenv("OPENAI_API_KEY")
     openai_model: str = os.getenv("OPENAI_MODEL", "gpt-5.4-mini")
+    # Google OAuth ID Token 검증에 사용할 client id
+    google_client_id: str | None = os.getenv("GOOGLE_CLIENT_ID")
 
 
 settings = Settings()

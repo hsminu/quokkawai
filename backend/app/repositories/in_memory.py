@@ -7,6 +7,7 @@ from app.schemas.app_category import AppCategoryResponse, AppCategoryUpdateReque
 from app.schemas.common import AppCategory
 from app.schemas.settings import UserSettings, UserSettingsUpdateRequest, default_target_categories
 from app.schemas.usage_log import UsageLogCreateItem, UsageLogResponse
+from app.schemas.user import UserResponse
 from app.services.openai_category_service import classify_app_category
 
 
@@ -141,6 +142,32 @@ class InMemoryUserSettingsRepository:
         )
         self._settings[user_id] = settings
         return settings
+
+
+class InMemoryUserRepository:
+    def __init__(self) -> None:
+        self._users: dict[str, UserResponse] = {}
+
+    def upsert_google_user(
+        self,
+        provider_user_id: str,
+        email: str | None,
+        nickname: str | None,
+    ) -> UserResponse:
+        user_id = _build_google_user_id(provider_user_id)
+        user = UserResponse(
+            userId=user_id,
+            provider="google",
+            providerUserId=provider_user_id,
+            email=email,
+            nickname=nickname,
+        )
+        self._users[user_id] = user
+        return user
+
+
+def _build_google_user_id(provider_user_id: str) -> str:
+    return f"google_{provider_user_id}"
 
 
 def _build_default_settings(user_id: str) -> UserSettings:

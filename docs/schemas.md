@@ -155,10 +155,9 @@ ETC
 
 ```json
 {
-  "accessToken": "server-access-token",
-  "tokenType": "bearer",
+  "success": true,
   "user": {
-    "userId": "user_001",
+    "userId": "google_google-sub-value",
     "provider": "google",
     "providerUserId": "google-sub-value",
     "email": "user@example.com",
@@ -171,9 +170,11 @@ ETC
 
 | 필드 | 타입 | 필수 | 설명 |
 |---|---|---:|---|
-| accessToken | string | O | 서버 발급 access token |
-| tokenType | string | O | bearer |
+| success | boolean | O | 로그인 처리 성공 여부 |
 | user | UserResponse | O | 사용자 정보 |
+
+현재 구현 단계에서는 서버 access token을 발급하지 않는다.
+`userId`는 Google ID Token의 `sub` 값을 기반으로 `google_{sub}` 형식으로 만든다.
 
 ---
 

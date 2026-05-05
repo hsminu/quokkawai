@@ -103,16 +103,19 @@ Google ID Token을 서버에 전달하여 사용자를 로그인 처리한다.
 }
 ```
 
+현재 구현 단계에서는 서버 access token을 아직 발급하지 않는다.
+검증된 Google ID Token의 `sub` 값으로 `users/{userId}`를 생성하거나 갱신하고,
+반환된 `userId`를 기존 API의 `userId` 값으로 사용한다.
+
 ---
 
 ### Response
 
 ```json
 {
-  "accessToken": "server-access-token",
-  "tokenType": "bearer",
+  "success": true,
   "user": {
-    "userId": "user_001",
+    "userId": "google_google-sub-value",
     "provider": "google",
     "providerUserId": "google-sub-value",
     "email": "user@example.com",
@@ -625,6 +628,7 @@ OpenAI 설정이 없거나 호출에 실패하면 서버는 로컬 대체 분석
 ```env
 OPENAI_API_KEY=...
 OPENAI_MODEL=gpt-5.4-mini
+GOOGLE_CLIENT_ID=...
 ```
 
 ### 사용자 설정 API

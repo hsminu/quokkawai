@@ -11,6 +11,7 @@ from app.schemas.app_category import AppCategoryResponse, AppCategoryUpdateReque
 from app.schemas.common import AppCategory
 from app.schemas.settings import UserSettings, UserSettingsUpdateRequest, default_target_categories
 from app.schemas.usage_log import UsageLogCreateItem, UsageLogResponse
+from app.schemas.user import UserResponse
 from app.services.openai_category_service import classify_app_category
 
 
@@ -271,6 +272,39 @@ class FirestoreUserSettingsRepository:
             analysisTone=data.get("analysisTone") or "SOFT",
             updatedAt=data["updatedAt"],
         )
+
+
+class FirestoreUserRepository:
+    def __init__(self, db: Any) -> None:
+        self._collection = db.collection("users")
+
+    def upsert_google_user(
+        self,
+        provider_user_id: str,
+        email: str | None,
+        nickname: str | None,
+    ) -> UserResponse:
+        user = UserResponse(
+            userId=_build_google_user_id(provider_user_id),
+            provider="google",
+            providerUserId=provider_user_id,
+            email=email,
+            nickname=nickname,
+        )
+        document = self._collection.document(user.userId)
+        snapshot = document.get()
+        data = {
+            **user.model_dump(mode="json"),
+            "updatedAt": _server_timestamp(),
+        }
+        if not snapshot.exists:
+            data["createdAt"] = _server_timestamp()
+        document.set(data, merge=True)
+        return user
+
+
+def _build_google_user_id(provider_user_id: str) -> str:
+    return f"google_{provider_user_id}"
 
 
 def _build_default_settings(user_id: str) -> UserSettings:

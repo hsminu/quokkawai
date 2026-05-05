@@ -42,7 +42,7 @@ users/{userId}
 
 ```json
 {
-  "userId": "user_001",
+  "userId": "google_google-sub-value",
   "provider": "google",
   "providerUserId": "google-sub-value",
   "email": "user@example.com",
@@ -51,6 +51,8 @@ users/{userId}
   "updatedAt": "2026-05-01T12:00:00+09:00"
 }
 ```
+
+현재 구현에서는 Google ID Token의 `sub` 값으로 `google_{sub}` 형식의 `userId`를 만든다.
 
 ---
 
